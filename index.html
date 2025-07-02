@@ -108,27 +108,14 @@
   <h6>suggestions.myles.me@gmail.com</h6>
   <a href="light.html">Switch to Light mode</a>
 
-  <script>
-    // AJAX form submission to avoid page reload
-    const form = document.getElementById('suggestion-form');
-    const messageDiv = document.getElementById('form-message');
 
-    form.addEventListener('submit', function(event) {
-      event.preventDefault();
-      const data = new FormData(form);
-      fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(data).toString()
-      })
-      .then(() => {
-        messageDiv.textContent = "Thank you for your suggestion!";
-        form.reset();
-      })
-      .catch(() => {
-        messageDiv.textContent = "Oops! There was a problem submitting your suggestion.";
-      });
-    });
-  </script>
+   <form name="suggestions" method="POST" data-netlify="true">
+  <input type="hidden" name="form-name" value="suggestions" />
+  <label for="suggestion">Got a suggestion?</label>
+  <textarea id="suggestion" name="Suggestion" rows="6" placeholder="Type your suggestion here..." required></textarea>
+  <button type="submit">Send Suggestion</button>
+</form>
+  
+  
 </body>
 </html>
