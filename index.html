@@ -150,18 +150,7 @@ a:hover, a:focus, a:active {
   <span></span>
 </button>
 
-<script>
 
-const menuButton = document.getElementById('menu');
-const sidebar = document.querySelector('.sidebar');
-
-menuButton.addEventListener('click', function() {
-  sidebar.classList.toggle('active');
-});
-</script>
-<div class="sidebar">
-  <h1>test</h1>
-</div>
 
   <div class="socials">
     <h1>Socials</h1>
@@ -214,5 +203,20 @@ menuButton.addEventListener('click', function() {
   <a href="light.html">Switch to Light mode</a>
   <a href="main.html">Back to main site</a>
 </div>
+<div class="sidebar">
+  <h1>test</h1>
+</div>
+
+<!-- other content -->
+
+<script>
+  const menuButton = document.getElementById('menu');
+  const sidebar = document.querySelector('.sidebar');
+
+  menuButton.addEventListener('click', function() {
+    sidebar.classList.toggle('active');
+  });
+</script>
+</body>
 </body>
 </html>
