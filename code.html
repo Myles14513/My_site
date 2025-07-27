@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>VS Code Web Editor (Dark Theme)</title>
+<title>VS Code Web Editor (Dark Theme + Firebase Save/Load)</title>
 <style>
   /* Reset */
   * {
@@ -37,6 +37,9 @@
     padding: 12px 16px;
     border-bottom: 1px solid #333;
     color: #ccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   #file-explorer {
     flex: 1;
@@ -98,6 +101,29 @@
     cursor: pointer;
   }
   #new-file-container button:hover {
+    background-color: #1177cc;
+  }
+
+  /* Add Save/Load buttons container */
+  #save-load-container {
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 16px;
+    border-top: 1px solid #333;
+    background: #1e1e1e;
+  }
+  #save-load-container button {
+    flex: 1;
+    margin: 0 5px;
+    background-color: #0e639c;
+    border: none;
+    color: white;
+    border-radius: 3px;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 0;
+  }
+  #save-load-container button:hover {
     background-color: #1177cc;
   }
 
@@ -228,6 +254,10 @@
       <input type="text" id="new-file-name" placeholder="New file name..." aria-label="New file name" />
       <button id="btn-add-file" aria-label="Add new file">Add</button>
     </div>
+    <div id="save-load-container">
+      <button id="btn-save-files" aria-label="Save files to Firebase">Save</button>
+      <button id="btn-load-files" aria-label="Load files from Firebase">Load</button>
+    </div>
   </nav>
 
   <!-- Main editor area -->
@@ -253,10 +283,27 @@
 
 </div>
 
-<script>
-  // Initial simple JS to add new files, tabs and switch editor content.
-  // Will evolve later for saving/loading and syntax support.
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+<script>
+  // Your Firebase config here
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // Elements
   const fileListEl = document.getElementById('file-list');
   const newFileNameInput = document.getElementById('new-file-name');
   const btnAddFile = document.getElementById('btn-add-file');
@@ -264,6 +311,8 @@
   const codeEditor = document.getElementById('code-editor');
   const statusLeft = document.getElementById('status-left');
   const statusRight = document.getElementById('status-right');
+  const btnSaveFiles = document.getElementById('btn-save-files');
+  const btnLoadFiles = document.getElementById('btn-load-files');
 
   // Files data structure: { filename: { content, language } }
   const files = {};
@@ -437,6 +486,64 @@
   });
   newFileNameInput.addEventListener('keydown', e => {
     if(e.key === 'Enter') addFile(newFileNameInput.value.trim());
+  });
+
+  // Save files to Firebase
+  btnSaveFiles.addEventListener('click', () => {
+    if(activeFile) {
+      files[activeFile].content = codeEditor.value;
+    }
+    const userKey = 'guestUser'; // Replace with actual user/session key if you want multi-user
+    statusLeft.textContent = 'Saving...';
+    firebase.database().ref(`editors/${userKey}/files`).set(files)
+      .then(() => {
+        statusLeft.textContent = 'Save successful!';
+        setTimeout(() => { statusLeft.textContent = 'Ready'; }, 2000);
+      })
+      .catch((err) => {
+        statusLeft.textContent = 'Save failed!';
+        alert('Error saving files: ' + err.message);
+      });
+  });
+
+  // Load files from Firebase
+  btnLoadFiles.addEventListener('click', () => {
+    const userKey = 'guestUser'; // Replace with actual user/session key
+    statusLeft.textContent = 'Loading...';
+    firebase.database().ref(`editors/${userKey}/files`).once('value')
+      .then(snapshot => {
+        const data = snapshot.val();
+        if(!data) {
+          alert('No saved files found.');
+          statusLeft.textContent = 'Ready';
+          return;
+        }
+        // Save current file content first
+        if(activeFile) {
+          files[activeFile].content = codeEditor.value;
+        }
+        // Replace files object
+        for(let key in files) delete files[key]; // clear current
+        for(let key in data) {
+          files[key] = data[key];
+        }
+        // Reset tabs & open first file
+        openTabs = Object.keys(files);
+        if(openTabs.length) {
+          openFile(openTabs[0]);
+        } else {
+          activeFile = null;
+          codeEditor.value = '';
+          renderTabs();
+        }
+        renderFileList();
+        statusLeft.textContent = 'Load successful!';
+        setTimeout(() => { statusLeft.textContent = 'Ready'; }, 2000);
+      })
+      .catch(err => {
+        statusLeft.textContent = 'Load failed!';
+        alert('Error loading files: ' + err.message);
+      });
   });
 
   // Initial welcome file
