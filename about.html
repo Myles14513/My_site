@@ -6,24 +6,27 @@
   <title>About Me - Myles.me</title>
   <style>
     body {
-      background-color: black;
-      color: white;
-      font-family: monospace, Arial, sans-serif;
       text-align: center;
-      padding: 60px 20px;
-      line-height: 1.6;
+      background-color: #000000;
+      color: #FFFFFF; 
       margin: 0;
+      font-family: Arial, sans-serif;
+      padding: 20px;
     }
 
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
+    a {
+      padding: 5px 10px;
+      display: inline-block;
+      margin: 5px 0;
+      text-decoration: none;
+      color: #FFFFFF;
     }
 
-
-
-    a.back-link svg {
-      vertical-align: middle;
+    a:hover {
+      transform: scale(1.1);
+      transition: transform 0.5s ease;
+      color: #1DA1F2;
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -36,13 +39,7 @@
       I made this website to try out my skills and see what I can build, it can help others find me. I’m pretty proud of it and can’t wait to keep getting better! I have mostly done this site from my phone but some on a school laptop. I hope I will be able to buy myself a laptop soon!
     </p>
 
-    <a href="index.html" class="back-link" aria-label="Go back to home">
-      <svg width="24" height="24" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="16" height="16" fill="black"/>
-        <path fill="white" d="M4.5 8l6-5v10l-6-5z"/>
-      </svg>
-      Back
-    </a>
+    <a href="index.html">Back</a><br>
     <a href="lightabout.html">Switch to light mode</a>
   </div>
 </body>
