@@ -48,6 +48,46 @@
     h1, h6 {
       margin-bottom: 10px;
     }
+    
+    .sidebar {
+  position: fixed;
+  top: 0;
+  left: -250px;     
+  width: 250px;
+  height: 100%;
+  background-color: #f0f0f0; 
+  color: #222;               
+  transition: left 0.3s ease;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1); 
+}
+
+.sidebar.active {
+  left: 0;          
+}
+
+#menu {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  padding: 10px 15px;
+  background-color: #ddd;   
+  color: #222;              
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15); 
+}
+
+#menu span {
+  display: block;
+  width: 25px;        
+  height: 3px;
+  background-color: #222;  
+  margin: 4px 0;       
+  border-radius: 2px;
+}
+    
   </style>
 </head>
 <body>
