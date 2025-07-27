@@ -72,6 +72,44 @@ text-decoration: underline;
        justify-content: center;
        gap: 8px;
        }
+
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -250px;     
+  width: 250px;
+  height: 100%;
+  background-color: #111;
+  transition: left 0.3s ease;
+}
+
+.sidebar.active {
+  left: 0;          
+}
+
+#menu {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  padding: 10px 15px;
+  background-color: #333;
+  color: white;
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+  border-radius: 5px;
+}
+
+#menu span {
+  display: block;
+  width: 25px;        
+  height: 3px;
+  background-color: white;  
+  margin: 4px 0;       
+  border-radius: 2px;
+}
+
 .social-links a {
       display: flex;
       align-items: center;
@@ -100,11 +138,30 @@ a:hover, a:focus, a:active {
   color: #1DA1F2; 
 }
 
+
    
 </style>
 </head>
 <body>
-  
+
+<button id="menu" aria-label="Menu">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<script>
+
+const menuButton = document.getElementById('menu');
+const sidebar = document.querySelector('.sidebar');
+
+menuButton.addEventListener('click', function() {
+  sidebar.classList.toggle('active');
+});
+</script>
+<div class="sidebar">
+  <h1>test</h1>
+</div>
 
   <div class="socials">
     <h1>Socials</h1>
@@ -132,7 +189,7 @@ a:hover, a:focus, a:active {
     <h2>Contact me</h2>
     <div class="contact-info">
     <p>+44 7754 212932</p>
-    <h6>myles@mylesme.netlify.app</h6>
+    <a href="mailto:Myles14511@gmail.com">
       <img src="https://static.vecteezy.com/system/resources/previews/016/716/465/non_2x/gmail-icon-free-png.png" alt="Gmail logo" width="20">
       Gmail
     </a>
@@ -153,7 +210,7 @@ a:hover, a:focus, a:active {
   </form>
 
 
-  <a href="mailto:myles@mylesme.netlify.app">
+  <h6>suggestions.myles.me@gmail.com</h6>
   <a href="light.html">Switch to Light mode</a>
   <a href="main.html">Back to main site</a>
 </div>
