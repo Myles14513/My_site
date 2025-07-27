@@ -88,11 +88,55 @@
       color: #1DA1F2;
     }
     
+    .sidebar {
+  position: fixed;
+  top: 0;
+  left: -250px;     
+  width: 250px;
+  height: 100%;
+  background-color: #f0f0f0; /* light gray background */
+  color: #222;               /* dark text color */
+  transition: left 0.3s ease;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* subtle shadow for depth */
+}
+
+.sidebar.active {
+  left: 0;          
+}
+
+#menu {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  padding: 10px 15px;
+  background-color: #ddd;   /* light button background */
+  color: #222;              /* dark button text */
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* subtle shadow */
+}
+
+#menu span {
+  display: block;
+  width: 25px;        
+  height: 3px;
+  background-color: #222;  /* dark hamburger lines */
+  margin: 4px 0;       
+  border-radius: 2px;
+}
 
     
   </style>
 </head>
 <body>
+  
+  <button id="menu" aria-label="Menu">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
 
   <div class="socials">
     <h1>Socials</h1>
@@ -144,6 +188,26 @@
     <a href="index.html">Switch to Dark mode</a>
     <a href="lightmain.html">Back to main site</a>
   </div>
+  
+  
+  <div class="sidebar">
+  <br><br><h1>Navigation<h1>
+      <a href="main.html">🏠Home</a><br>
+    <a href="qualifications.html">📜Quals</a>
+    <a href="about.html">👤About Me</a>
+    <a href="index.html">🌞 Switch to Light Mode</a>
+</div>
+
+<!-- other content -->
+
+<script>
+  const menuButton = document.getElementById('menu');
+  const sidebar = document.querySelector('.sidebar');
+
+  menuButton.addEventListener('click', function() {
+    sidebar.classList.toggle('active');
+  });
+</script>
 
 </body>
 </html>
