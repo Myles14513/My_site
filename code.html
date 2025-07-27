@@ -2,36 +2,186 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mini VS Code Editor</title>
+<title>Mini VS Code Editor with Files</title>
 <style>
-  /* your existing styles (unchanged) */
   * { box-sizing: border-box; }
-  body, html { margin: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: #1e1e1e; color: #ddd; display: flex; }
-  #sidebar { width: 200px; background: #252526; display: flex; flex-direction: column; padding:10px; color:#ccc; user-select: none; }
-  #sidebar h2 { margin:0 0 15px; font-size: 18px; }
-  #sidebar button { margin:5px 0; padding:8px; background:#3a3d41; border:none; color:#ccc; cursor:pointer; border-radius:3px; font-size:14px; }
-  #sidebar button:hover { background:#505357; }
-  #main { flex:1; display:flex; flex-direction:column; }
-  #tabs { background:#252526; display:flex; }
-  #tabs button { flex:1; background:#252526; border:none; color:#ccc; padding:10px; cursor:pointer; font-size:16px; border-bottom:2px solid transparent; }
-  #tabs button.active { border-bottom:2px solid #0e639c; background:#1e1e1e; color:#fff; }
-  textarea { flex:1; background:#1e1e1e; border:none; color:#ddd; font-family:monospace; font-size:14px; padding:10px; resize:none; outline:none; width:100%; height:100%; }
-  #editor-container { flex:1; display:flex; flex-direction:column; }
-  #edit-buttons { background:#252526; padding:5px 10px; display:flex; gap:10px; }
-  #edit-buttons button { background:#3a3d41; border:none; color:#ccc; padding:5px 12px; border-radius:3px; cursor:pointer; font-size:14px; }
-  #edit-buttons button:hover { background:#505357; }
-  #preview { height:200px; border:none; background:white; margin-top:10px; }
+  body, html {
+    margin: 0; height: 100%;
+    font-family: 'Segoe UI', sans-serif;
+    background: #1e1e1e; color: #ddd;
+    display: flex;
+  }
+  #sidebar {
+    width: 220px;
+    background: #252526;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    color: #ccc;
+    user-select: none;
+  }
+  #sidebar h2 {
+    margin: 0 0 15px;
+    font-size: 18px;
+  }
+  #sidebar .files-section {
+    margin-bottom: 20px;
+  }
+  #sidebar .files-section h3 {
+    margin: 5px 0;
+    font-weight: normal;
+  }
+  #sidebar button, #sidebar input[type=text] {
+    margin: 5px 0;
+    padding: 8px;
+    background: #3a3d41;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 14px;
+    width: 100%;
+  }
+  #sidebar button:hover {
+    background: #505357;
+  }
+  #sidebar input[type=text] {
+    color: #000;
+    cursor: text;
+  }
+  #sidebar ul {
+    list-style: none;
+    padding-left: 0;
+    max-height: 120px;
+    overflow-y: auto;
+    margin: 5px 0 10px;
+    border: 1px solid #444;
+    border-radius: 3px;
+  }
+  #sidebar ul li {
+    padding: 5px 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #sidebar ul li.active {
+    background: #0e639c;
+    color: white;
+  }
+  #sidebar ul li:hover:not(.active) {
+    background: #444;
+  }
+  #sidebar ul li button.delete-file {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  #tabs {
+    background: #252526;
+    display: flex;
+  }
+  #tabs button {
+    flex: 1;
+    background: #252526;
+    border: none;
+    color: #ccc;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    border-bottom: 2px solid transparent;
+  }
+  #tabs button.active {
+    border-bottom: 2px solid #0e639c;
+    background: #1e1e1e;
+    color: #fff;
+  }
+  #editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  textarea {
+    flex: 1;
+    background: #1e1e1e;
+    border: none;
+    color: #ddd;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 10px;
+    resize: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+  }
+  #edit-buttons {
+    background: #252526;
+    padding: 5px 10px;
+    display: flex;
+    gap: 10px;
+  }
+  #edit-buttons button {
+    background: #3a3d41;
+    border: none;
+    color: #ccc;
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #edit-buttons button:hover {
+    background: #505357;
+  }
+  #preview {
+    height: 250px;
+    border: none;
+    background: white;
+    margin-top: 10px;
+  }
 </style>
 </head>
 <body>
 
 <div id="sidebar">
   <h2>Editor Controls</h2>
-  <button id="btn-save">Save (code)</button>
-  <button id="btn-load">Load (code)</button>
+  <button id="btn-save">Save (all files)</button>
+  <button id="btn-load">Load (all files)</button>
   <button id="btn-run">Run</button>
   <hr style="border-color:#444;">
-  <small style="color:#666;">On PS5: use the buttons to insert tab or newline</small>
+  <small style="color:#666;">On PS5: use buttons to insert tab or newline</small>
+
+  <hr style="border-color:#444; margin: 15px 0;">
+  
+  <!-- Files per language -->
+  <div class="files-section" data-lang="html">
+    <h3>HTML Files</h3>
+    <input type="text" placeholder="New HTML file name" id="new-file-html" />
+    <button class="btn-add-file" data-lang="html">Add HTML File</button>
+    <ul id="file-list-html"></ul>
+  </div>
+
+  <div class="files-section" data-lang="css">
+    <h3>CSS Files</h3>
+    <input type="text" placeholder="New CSS file name" id="new-file-css" />
+    <button class="btn-add-file" data-lang="css">Add CSS File</button>
+    <ul id="file-list-css"></ul>
+  </div>
+
+  <div class="files-section" data-lang="js">
+    <h3>JS Files</h3>
+    <input type="text" placeholder="New JS file name" id="new-file-js" />
+    <button class="btn-add-file" data-lang="js">Add JS File</button>
+    <ul id="file-list-js"></ul>
+  </div>
 </div>
 
 <div id="main">
@@ -53,81 +203,251 @@
 </div>
 
 <script>
-// helper insert
-function insertAtCursor(txt, str) {
-  const s = txt.selectionStart, e = txt.selectionEnd;
-  txt.value = txt.value.slice(0, s) + str + txt.value.slice(e);
-  txt.selectionStart = txt.selectionEnd = s + str.length;
-  txt.focus();
-}
-
-// tabs
-const tabs = { html:document.getElementById('tab-html'), css:document.getElementById('tab-css'), js:document.getElementById('tab-js') };
-const editors = { html:document.getElementById('editor-html'), css:document.getElementById('editor-css'), js:document.getElementById('editor-js') };
-let current = 'html';
-Object.keys(tabs).forEach(key => tabs[key].onclick = () => {
-  current = key;
-  Object.keys(editors).forEach(k => {
-    editors[k].style.display = k===key?'block':'none';
-    tabs[k].classList.toggle('active', k===key);
-  });
-});
-
-// insert buttons
-document.getElementById('btn-tab').onclick = () => insertAtCursor(editors[current], '  ');
-document.getElementById('btn-newline').onclick = () => insertAtCursor(editors[current], '\n');
-
-// run code integration
-document.getElementById('btn-run').onclick = () => {
-  const html = editors.html.value;
-  const css = `<style>${editors.css.value}</style>`;
-  const js  = `<script>${editors.js.value}<\/script>`;
-  document.getElementById('preview').srcdoc = html + css + js;
-};
-
-// local save/load
-document.getElementById('btn-save').onclick = () => {
-  localStorage.setItem('code-html', editors.html.value);
-  localStorage.setItem('code-css', editors.css.value);
-  localStorage.setItem('code-js', editors.js.value);
-  const code = prompt('Shareable code:', '');
-  if(!code) return;
-  saveRemote(code);
-};
-document.getElementById('btn-load').onclick = () => {
-  const code = prompt('Enter shareable code:', '');
-  if(code) loadRemote(code);
-};
-
-// remote save/load Firebase
-function saveRemote(code) {
-  const payload = {
-    html: editors.html.value,
-    css: editors.css.value,
-    js: editors.js.value
+  // State: files per language, current file per language
+  const files = {
+    html: {},
+    css: {},
+    js: {}
   };
-  fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`, {
-    method: 'PUT', body: JSON.stringify(payload)
-  }).then(_ => alert(`Saved at code: ${code}`));
-}
-function loadRemote(code) {
-  fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`)
-    .then(r => r.json()).then(data => {
-      if(data) {
-        editors.html.value = data.html || '';
-        editors.css.value = data.css || '';
-        editors.js.value = data.js || '';
-        tabs.html.click();
-        document.getElementById('btn-run').click();
-      } else alert('No code found.');
-    });
-}
+  const currentFile = {
+    html: null,
+    css: null,
+    js: null
+  };
 
-// prefill
-editors.html.value = "<!-- HTML here -->\n<div>Hello!</div>";
-editors.css.value  = "body { color: darkblue; }";
-editors.js.value   = "console.log('JS ready!');";
-tabs.html.click();
+  // Elements
+  const tabs = {
+    html: document.getElementById('tab-html'),
+    css: document.getElementById('tab-css'),
+    js: document.getElementById('tab-js')
+  };
+  const editors = {
+    html: document.getElementById('editor-html'),
+    css: document.getElementById('editor-css'),
+    js: document.getElementById('editor-js')
+  };
+
+  // Initialize UI
+  function switchTab(tab) {
+    for (const key in tabs) {
+      tabs[key].classList.toggle('active', key === tab);
+      editors[key].style.display = (key === tab) ? 'block' : 'none';
+    }
+    loadCurrentFile(tab);
+  }
+
+  // Load current file content into editor
+  function loadCurrentFile(lang) {
+    if(currentFile[lang] && files[lang][currentFile[lang]] !== undefined){
+      editors[lang].value = files[lang][currentFile[lang]];
+    } else {
+      editors[lang].value = '';
+    }
+  }
+
+  // Save editor content to current file
+  function saveCurrentFile(lang) {
+    if(currentFile[lang]) {
+      files[lang][currentFile[lang]] = editors[lang].value;
+      updateFileList(lang);
+    }
+  }
+
+  // Update file list UI for language
+  function updateFileList(lang) {
+    const ul = document.getElementById(`file-list-${lang}`);
+    ul.innerHTML = '';
+    Object.keys(files[lang]).forEach(fname => {
+      const li = document.createElement('li');
+      li.textContent = fname;
+      if (currentFile[lang] === fname) li.classList.add('active');
+
+      // Click to select file
+      li.onclick = () => {
+        saveCurrentFile(lang); // save current before switching
+        currentFile[lang] = fname;
+        loadCurrentFile(lang);
+        updateFileList(lang);
+        if(lang === current) {
+          editors[lang].focus();
+        }
+      };
+
+      // Delete button
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '×';
+      delBtn.title = 'Delete file';
+      delBtn.className = 'delete-file';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        if(confirm(`Delete file "${fname}"?`)) {
+          delete files[lang][fname];
+          if(currentFile[lang] === fname) currentFile[lang] = null;
+          updateFileList(lang);
+          if(lang === current) {
+            editors[lang].value = '';
+          }
+        }
+      };
+      li.appendChild(delBtn);
+
+      ul.appendChild(li);
+    });
+  }
+
+  // Add new file for language
+  function addFile(lang, name) {
+    if(!name) {
+      alert('Please enter a file name');
+      return;
+    }
+    if(files[lang][name]) {
+      alert('File already exists');
+      return;
+    }
+    saveCurrentFile(current); // save current file before switching
+
+    files[lang][name] = '';
+    currentFile[lang] = name;
+    updateFileList(lang);
+    if(current === lang) {
+      editors[lang].value = '';
+      editors[lang].focus();
+    }
+  }
+
+  // Insert text at cursor helper
+  function insertAtCursor(textarea, text) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const val = textarea.value;
+    textarea.value = val.substring(0, start) + text + val.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + text.length;
+    textarea.focus();
+  }
+
+  // Save/load all files to/from localStorage
+  function saveAllLocal() {
+    for(const lang of ['html','css','js']) {
+      saveCurrentFile(lang);
+    }
+    localStorage.setItem('files', JSON.stringify(files));
+    localStorage.setItem('currentFile', JSON.stringify(currentFile));
+    alert('All files saved locally!');
+  }
+  function loadAllLocal() {
+    const f = localStorage.getItem('files');
+    const c = localStorage.getItem('currentFile');
+    if(f && c) {
+      Object.assign(files, JSON.parse(f));
+      Object.assign(currentFile, JSON.parse(c));
+      for(const lang of ['html','css','js']){
+        updateFileList(lang);
+        if(!currentFile[lang] && Object.keys(files[lang]).length > 0) {
+          currentFile[lang] = Object.keys(files[lang])[0];
+        }
+      }
+      switchTab(current);
+      alert('All files loaded from localStorage!');
+    } else {
+      alert('No saved files found locally.');
+    }
+  }
+
+  // Remote save/load Firebase (keep your existing code here if you want)
+  // For demo purposes, I keep your existing saveRemote/loadRemote functions but now they save/load the whole "files" object and "currentFile"
+  function saveRemote(code) {
+    saveAllLocal(); // ensure latest saved locally first
+    fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`, {
+      method: 'PUT',
+      body: JSON.stringify({ files, currentFile })
+    }).then(_ => alert(`Saved all files at code: ${code}`));
+  }
+  function loadRemote(code) {
+    fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`)
+      .then(r => r.json())
+      .then(data => {
+        if(data && data.files && data.currentFile) {
+          Object.assign(files, data.files);
+          Object.assign(currentFile, data.currentFile);
+          for(const lang of ['html','css','js']) {
+            updateFileList(lang);
+            if(!currentFile[lang] && Object.keys(files[lang]).length > 0) {
+              currentFile[lang] = Object.keys(files[lang])[0];
+            }
+          }
+          switchTab(current);
+          alert('All files loaded from remote!');
+        } else {
+          alert('No code found.');
+        }
+      });
+  }
+
+  // Setup event listeners for add file buttons
+  document.querySelectorAll('.btn-add-file').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const lang = btn.dataset.lang;
+      const input = document.getElementById(`new-file-${lang}`);
+      addFile(lang, input.value.trim());
+      input.value = '';
+    });
+  });
+
+  // Tab switching
+  let current = 'html';
+  Object.keys(tabs).forEach(key => tabs[key].onclick = () => {
+    saveCurrentFile(current);
+    current = key;
+    switchTab(key);
+  });
+
+  // Insert buttons
+  document.getElementById('btn-tab').onclick = () => insertAtCursor(editors[current], '  ');
+  document.getElementById('btn-newline').onclick = () => insertAtCursor(editors[current], '\n');
+
+  // Run button
+  document.getElementById('btn-run').onclick = () => {
+    saveCurrentFile(current);
+    const htmlCode = Object.values(files.html).join('\n') || editors.html.value;
+    const cssCode = Object.values(files.css).map(c => `<style>${c}</style>`).join('\n') || `<style>${editors.css.value}</style>`;
+    const jsCode = Object.values(files.js).map(js => `<script>${js}<\/script>`).join('\n') || `<script>${editors.js.value}<\/script>`;
+
+    document.getElementById('preview').srcdoc = htmlCode + cssCode + jsCode;
+  };
+
+  // Save/load local buttons
+  document.getElementById('btn-save').onclick = () => {
+    const code = prompt('Enter a shareable code to save remotely (or cancel to save locally only):');
+    if(code) {
+      saveRemote(code);
+    } else {
+      saveAllLocal();
+    }
+  };
+  document.getElementById('btn-load').onclick = () => {
+    const code = prompt('Enter shareable code to load remotely (or cancel to load locally):');
+    if(code) {
+      loadRemote(code);
+    } else {
+      loadAllLocal();
+    }
+  };
+
+  // Initial default files
+  files.html['index.html'] = "<!-- HTML here -->\n<div>Hello!</div>";
+  currentFile.html = 'index.html';
+  files.css['style.css'] = "body { color: darkblue; }";
+  currentFile.css = 'style.css';
+  files.js['script.js'] = "console.log('JS ready!');";
+  currentFile.js = 'script.js';
+
+  // Init UI
+  for(const lang of ['html','css','js']) {
+    updateFileList(lang);
+  }
+  switchTab(current);
+
 </script>
 
 </body>
