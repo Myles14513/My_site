@@ -36,17 +36,21 @@ button {
         caret-color: #FFFFFF;
 }
 
-a img {
+#whitetext { 
+        color: white;
+} 
+
+a:img {
    vertical-align: middle;
    margin-right: 6px;
 }
 
 a:hover {
-transform: scale(1.1);
-transition: transform 0.5s ease;
-color: #1DA1F2;
-text-decoration: underline;
-}
+    transform: scale(1.1);
+    transition: transform 0.5s ease;
+    color: #1DA1F2;
+    text-decoration: underline;
+   }
 
 .socials {
      display: flex;
@@ -188,7 +192,9 @@ a:hover, a:focus, a:active {
    
     <label for="suggestion">Got a suggestion?</label><br>
     <textarea id="suggestion" name="Suggestion" rows="6" placeholder="Type your suggestion here..." required></textarea><br>
+      <div class="whitetext">
     <button type="submit">Send Suggestion</button>
+    </div>
     <div id="form-message"></div>
   </form>
 
