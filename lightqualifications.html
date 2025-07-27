@@ -58,12 +58,27 @@
 
     <img src="https://i.imgur.com/LZHpHj5_d.webp?maxwidth=150&fidelity=grand" alt="Qualification 1"> <br>
     <img src="https://i.imgur.com/gFQRaQp.jpeg" width="150" alt="Qualification 2"> <br>
+ 
 
-    <div class="options">
-      <a href="light.html">Back to main site</a><br>
-      <a href="qualifications.html">Dark mode</a>
-    </div>
-  </div>
+
+      <div class="sidebar">
+  <br><br><h1>Navigation<h1>
+      <a href="main.html">🏠Home</a><br>
+    <a href="about.html">👤 About Me</a>
+    <a href="light.html"> ℹ️ Info</a>
+    <a href="qualifications.html">🌚 Switch to Dark Mode</a>
+</div>
+
+<!-- other content -->
+
+<script>
+  const menuButton = document.getElementById('menu');
+  const sidebar = document.querySelector('.sidebar');
+
+  menuButton.addEventListener('click', function() {
+    sidebar.classList.toggle('active');
+  });
+</script>
 
 </body>
 </html>
