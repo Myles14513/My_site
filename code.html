@@ -30,8 +30,6 @@
     flex-direction: column;
     border-right: 1px solid #333;
     user-select: none;
-    position: relative;
-    z-index: 10;
   }
   #sidebar header {
     font-weight: 600;
@@ -135,9 +133,6 @@
     display: flex;
     flex-direction: column;
     background-color: #1e1e1e;
-    min-height: 0; /* important for flex */
-    position: relative;
-    z-index: 5;
   }
 
   /* Tabs bar */
@@ -191,15 +186,20 @@
   /* Editor container */
   #editor-container {
     flex: 1;
-    min-height: 0; /* important for flex */
     position: relative;
   }
-  #code-editor {
-    height: 100%;
+  textarea {
     width: 100%;
+    height: 100%;
+    background-color: #1e1e1e;
+    border: none;
+    color: #d4d4d4;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 12px;
+    resize: none;
     outline: none;
-    position: relative;
-    z-index: 1;
   }
 
   /* Status bar */
@@ -223,8 +223,6 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    pointer-events: auto;
-    z-index: 10;
   }
   #ps5-buttons button {
     background-color: #0e639c;
@@ -234,7 +232,6 @@
     border-radius: 3px;
     font-size: 14px;
     cursor: pointer;
-    pointer-events: auto;
   }
   #ps5-buttons button:hover {
     background-color: #1177cc;
@@ -269,8 +266,8 @@
       <!-- Tabs will be added here -->
     </div>
     <div id="editor-container">
-      <!-- CodeMirror editor will mount here -->
-      <div id="code-editor" spellcheck="false" aria-label="Code editor"></div>
+      <!-- Single textarea for now -->
+      <textarea id="code-editor" spellcheck="false" aria-label="Code editor"></textarea>
 
       <!-- PS5 buttons overlay -->
       <div id="ps5-buttons" aria-label="PS5 editor controls">
@@ -283,25 +280,15 @@
       <div id="status-right">Ln 1, Col 1</div>
     </footer>
   </main>
-
+<a href="chat.html">chat</a>
 </div>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-<!-- CodeMirror 6 modules -->
-<script type="module">
-  import {EditorState, Compartment} from "https://cdn.jsdelivr.net/npm/@codemirror/state@6.2.1/dist/index.min.js";
-  import {EditorView, keymap, highlightActiveLine, highlightActiveLineGutter} from "https://cdn.jsdelivr.net/npm/@codemirror/view@6.9.1/dist/index.min.js";
-  import {defaultKeymap, history, historyKeymap} from "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.5.1/dist/index.min.js";
-  import {javascript} from "https://cdn.jsdelivr.net/npm/@codemirror/lang-javascript@6.1.4/dist/index.min.js";
-  import {html} from "https://cdn.jsdelivr.net/npm/@codemirror/lang-html@6.2.0/dist/index.min.js";
-  import {python} from "https://cdn.jsdelivr.net/npm/@codemirror/lang-python@6.2.0/dist/index.min.js";
-  import {oneDark} from "https://cdn.jsdelivr.net/npm/@codemirror/theme-one-dark@6.2.0/dist/index.min.js";
-  import {syntaxHighlighting, defaultHighlightStyle} from "https://cdn.jsdelivr.net/npm/@codemirror/language@6.7.0/dist/index.min.js";
-
-  // Firebase config - REPLACE WITH YOUR ACTUAL CONFIG
+<script>
+  // Your Firebase config here
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -312,6 +299,7 @@
     appId: "YOUR_APP_ID"
   };
 
+  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
@@ -320,19 +308,16 @@
   const newFileNameInput = document.getElementById('new-file-name');
   const btnAddFile = document.getElementById('btn-add-file');
   const tabBar = document.getElementById('tab-bar');
-  const codeEditorDiv = document.getElementById('code-editor');
+  const codeEditor = document.getElementById('code-editor');
   const statusLeft = document.getElementById('status-left');
   const statusRight = document.getElementById('status-right');
   const btnSaveFiles = document.getElementById('btn-save-files');
   const btnLoadFiles = document.getElementById('btn-load-files');
-  const btnInsertTab = document.getElementById('btn-insert-tab');
-  const btnInsertNewline = document.getElementById('btn-insert-newline');
 
   // Files data structure: { filename: { content, language } }
   const files = {};
-  let openTabs = [];
+  let openTabs = []; // filenames currently open in tabs
   let activeFile = null;
-  let cmView = null;  // CodeMirror editor instance
 
   // Helper: detect language by file extension
   function detectLanguage(filename) {
@@ -343,7 +328,7 @@
     return 'plaintext';
   }
 
-  // Add file to files and UI
+  // Add a file to the files object and UI
   function addFile(name) {
     if(!name) {
       alert('Please enter a file name');
@@ -359,7 +344,7 @@
     newFileNameInput.value = '';
   }
 
-  // Render sidebar file list
+  // Render file list in sidebar
   function renderFileList() {
     fileListEl.innerHTML = '';
     Object.keys(files).forEach(name => {
@@ -368,14 +353,17 @@
       li.tabIndex = 0;
       li.setAttribute('role', 'button');
       if(name === activeFile) li.classList.add('active');
+
+      // Click to open file
       li.onclick = () => openFile(name);
       li.onkeydown = e => { if(e.key === 'Enter' || e.key === ' ') openFile(name); };
 
+      // Delete button
       const delBtn = document.createElement('button');
       delBtn.textContent = '×';
       delBtn.title = 'Delete file';
       delBtn.className = 'delete-file';
-      delBtn.onclick = e => {
+      delBtn.onclick = (e) => {
         e.stopPropagation();
         if(confirm(`Delete file "${name}"?`)) {
           closeFile(name);
@@ -394,7 +382,32 @@
     });
   }
 
-  // Render tabs
+  // Open a file (show tab + content)
+  function openFile(name) {
+    if(!files[name]) return;
+    // Save current content before switching
+    if(activeFile) {
+      files[activeFile].content = codeEditor.value;
+    }
+    activeFile = name;
+    if(!openTabs.includes(name)) openTabs.push(name);
+    renderTabs();
+    loadFileContent(name);
+  }
+
+  // Close file tab
+  function closeFile(name) {
+    // Save current if active
+    if(activeFile === name) {
+      files[name].content = codeEditor.value;
+      activeFile = null;
+    }
+    openTabs = openTabs.filter(n => n !== name);
+    renderTabs();
+    if(!activeFile && openTabs.length) openFile(openTabs[0]);
+  }
+
+  // Render tabs bar
   function renderTabs() {
     tabBar.innerHTML = '';
     openTabs.forEach(name => {
@@ -402,13 +415,16 @@
       tab.className = 'tab' + (name === activeFile ? ' active' : '');
       tab.textContent = name;
       tab.title = name;
+
+      // Clicking tab switches to file
       tab.onclick = () => openFile(name);
 
+      // Close button on tab
       const closeBtn = document.createElement('span');
       closeBtn.className = 'close-btn';
       closeBtn.textContent = '×';
       closeBtn.title = 'Close file';
-      closeBtn.onclick = e => {
+      closeBtn.onclick = (e) => {
         e.stopPropagation();
         closeFile(name);
       };
@@ -418,162 +434,137 @@
     });
   }
 
-  // Open a file in editor
-  function openFile(name) {
-    if(!files[name]) return;
-
-    // Save current file content before switch
-    if(activeFile && cmView) {
-      files[activeFile].content = cmView.state.doc.toString();
-    }
-    activeFile = name;
-    if(!openTabs.includes(name)) openTabs.push(name);
-    renderTabs();
-    renderFileList();
-    loadFileContent(name);
-  }
-
-  // Close a file tab
-  function closeFile(name) {
-    if(activeFile === name && cmView) {
-      files[name].content = cmView.state.doc.toString();
-      activeFile = null;
-    }
-    openTabs = openTabs.filter(n => n !== name);
-    renderTabs();
-    if(!activeFile && openTabs.length) openFile(openTabs[0]);
-    else if(openTabs.length === 0) {
-      // No files open
-      if(cmView) {
-        cmView.destroy();
-        cmView = null;
-      }
-      codeEditorDiv.textContent = '';
-      updateStatusBar();
-    }
-  }
-
-  // Load file content into CodeMirror
+  // Load file content into editor
   function loadFileContent(name) {
-    if(cmView) {
-      cmView.destroy();
-      cmView = null;
-    }
-
-    const language = files[name].language;
-    let languageExtension = [];
-    switch(language) {
-      case 'javascript': languageExtension = [javascript()]; break;
-      case 'html': languageExtension = [html()]; break;
-      case 'python': languageExtension = [python()]; break;
-      case 'css': languageExtension = []; break;
-      default: languageExtension = [];
-    }
-
-    cmView = new EditorView({
-      state: EditorState.create({
-        doc: files[name].content,
-        extensions: [
-          keymap.of([...defaultKeymap, ...historyKeymap]),
-          history(),
-          syntaxHighlighting(defaultHighlightStyle, {fallback: true}),
-          highlightActiveLine(),
-          highlightActiveLineGutter(),
-          oneDark,
-          ...languageExtension,
-          EditorView.updateListener.of(update => {
-            if (update.docChanged || update.selectionSet) {
-              updateStatusBar();
-            }
-          })
-        ]
-      }),
-      parent: codeEditorDiv
-    });
-
+    codeEditor.value = files[name].content;
     updateStatusBar();
-    cmView.focus();
+    codeEditor.focus();
   }
 
-  // Update status bar line and column
+  // Update status bar line/col
   function updateStatusBar() {
-    if(!cmView) {
-      statusRight.textContent = "Ln 1, Col 1";
-      return;
-    }
-    const selection = cmView.state.selection.main;
-    const line = cmView.state.doc.lineAt(selection.head);
-    const col = selection.head - line.from + 1;
-    statusRight.textContent = `Ln ${line.number}, Col ${col}`;
+    const pos = getCaretPosition(codeEditor);
+    statusRight.textContent = `Ln ${pos.line}, Col ${pos.col}`;
+  }
+  // Get caret position helper
+  function getCaretPosition(el) {
+    const pos = el.selectionStart;
+    const text = el.value.substr(0, pos);
+    const lines = text.split('\n');
+    return {
+      line: lines.length,
+      col: lines[lines.length - 1].length + 1
+    };
   }
 
-  // Insert text helper for buttons
-  function insertAtCursor(text) {
-    if(!cmView) return;
-    const {state, dispatch} = cmView;
-    const changes = {from: state.selection.main.from, to: state.selection.main.to, insert: text};
-    dispatch(state.update({changes, selection: {anchor: state.selection.main.from + text.length}}));
-    cmView.focus();
+  // Insert Tab or Newline buttons for PS5
+  document.getElementById('btn-insert-tab').onclick = () => {
+    insertAtCursor(codeEditor, '  ');
+  };
+  document.getElementById('btn-insert-newline').onclick = () => {
+    insertAtCursor(codeEditor, '\n');
+  };
+
+  // Insert text helper at cursor
+  function insertAtCursor(textarea, text) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const val = textarea.value;
+    textarea.value = val.slice(0, start) + text + val.slice(end);
+    textarea.selectionStart = textarea.selectionEnd = start + text.length;
+    textarea.focus();
+    updateStatusBar();
   }
 
-  // PS5 buttons events
-  btnInsertTab.onclick = () => insertAtCursor('  ');
-  btnInsertNewline.onclick = () => insertAtCursor('\n');
+  // Update status on cursor move or input
+  codeEditor.addEventListener('keyup', updateStatusBar);
+  codeEditor.addEventListener('click', updateStatusBar);
 
-  // Add new file button events
-  btnAddFile.onclick = () => addFile(newFileNameInput.value.trim());
+  // Add new file button
+  btnAddFile.addEventListener('click', () => {
+    addFile(newFileNameInput.value.trim());
+  });
   newFileNameInput.addEventListener('keydown', e => {
     if(e.key === 'Enter') addFile(newFileNameInput.value.trim());
   });
 
-  // Firebase save/load paths
-  const firebaseDbPath = 'webEditorFiles';
-
-  btnSaveFiles.onclick = () => {
-    if(!Object.keys(files).length) {
-      alert('No files to save');
-      return;
+  // Save files to Firebase
+  btnSaveFiles.addEventListener('click', () => {
+    if(activeFile) {
+      files[activeFile].content = codeEditor.value;
     }
-    // Save files to Firebase under user key or generic key
-    database.ref(firebaseDbPath).set(files)
-      .then(() => alert('Files saved successfully'))
-      .catch(err => alert('Save failed: ' + err.message));
-  };
-
-  btnLoadFiles.onclick = () => {
-    database.ref(firebaseDbPath).get()
-      .then(snapshot => {
-        if(snapshot.exists()) {
-          const loadedFiles = snapshot.val();
-          Object.keys(loadedFiles).forEach(name => {
-            files[name] = loadedFiles[name];
-          });
-          // Open first file loaded
-          if(Object.keys(files).length) {
-            openTabs = [];
-            activeFile = null;
-            openFile(Object.keys(files)[0]);
-            renderFileList();
-            renderTabs();
-            alert('Files loaded successfully');
-          } else {
-            alert('No files found in database');
-          }
-        } else {
-          alert('No saved files found');
-        }
+    const userKey = 'guestUser'; // Replace with actual user/session key if you want multi-user
+    statusLeft.textContent = 'Saving...';
+    firebase.database().ref(`editors/${userKey}/files`).set(files)
+      .then(() => {
+        statusLeft.textContent = 'Save successful!';
+        setTimeout(() => { statusLeft.textContent = 'Ready'; }, 2000);
       })
-      .catch(err => alert('Load failed: ' + err.message));
-  };
+      .catch((err) => {
+        statusLeft.textContent = 'Save failed!';
+        alert('Error saving files: ' + err.message);
+      });
+  });
 
-  // Initialization: create a default welcome file if empty
-  if(Object.keys(files).length === 0) {
-    files['welcome.html'] = {content: '<!-- Welcome to your editor! -->\n', language: 'html'};
-    openFile('welcome.html');
-    renderFileList();
-    renderTabs();
-  }
+  // Load files from Firebase
+  btnLoadFiles.addEventListener('click', () => {
+    const userKey = 'guestUser'; // Replace with actual user/session key
+    statusLeft.textContent = 'Loading...';
+    firebase.database().ref(`editors/${userKey}/files`).once('value')
+      .then(snapshot => {
+        const data = snapshot.val();
+        if(!data) {
+          alert('No saved files found.');
+          statusLeft.textContent = 'Ready';
+          return;
+        }
+        // Save current file content first
+        if(activeFile) {
+          files[activeFile].content = codeEditor.value;
+        }
+        // Replace files object
+        for(let key in files) delete files[key]; // clear current
+        for(let key in data) {
+          files[key] = data[key];
+        }
+        // Reset tabs & open first file
+        openTabs = Object.keys(files);
+        if(openTabs.length) {
+          openFile(openTabs[0]);
+        } else {
+          activeFile = null;
+          codeEditor.value = '';
+          renderTabs();
+        }
+        renderFileList();
+        statusLeft.textContent = 'Load successful!';
+        setTimeout(() => { statusLeft.textContent = 'Ready'; }, 2000);
+      })
+      .catch(err => {
+        statusLeft.textContent = 'Load failed!';
+        alert('Error loading files: ' + err.message);
+      });
+  });
 
+// Add save button listener
+document.getElementById('btn-save-remote').onclick = () => {
+  const code = prompt('Enter a shareable code to save remotely:');
+  if (code) saveRemote(code);
+};
+
+// Add load button listener
+document.getElementById('btn-load-remote').onclick = () => {
+  const code = prompt('Enter shareable code to load remotely:');
+  if (code) loadRemote(code);
+};
+
+  // Initial welcome file
+  addFile('index.html');
+  files['index.html'].content = "<!-- Start coding here -->\n<div>Hello world!</div>";
+  openFile('index.html');
+
+  updateStatusBar();
 </script>
+
 </body>
 </html>
