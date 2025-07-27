@@ -4,112 +4,158 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Myles.me - Dark Mode</title>
-  <style>
-    body {
-      background-color: black;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding-top: 50px;
-    }
-    h1, h2 {
-      margin-bottom: 20px;
-    }
-    a {
-      color: white;
+<style>
+ body {
+  text-align: center;
+  background-color: #000000;
+  color: #FFFFFF; 
+  margin: 0;
+ 
+}
+a {
+  padding: 5px 10px;
+  display: inline-block;
+  margin: 5px 0;
+  text-decoration: none;
+ inline-block-direction: column;
+  }
+
+button { 
+      background-color: #000000;
       text-decoration: none;
+      border: none;
+      border-radius: 5px;
+   }
+
+#suggestion {
+        background-color: #000000;
+        text-decoration: none;
+        border: none;
+        border-radius: 300;
+       outline: none;
+        caret-color: #FFFFFF;
+}
+
+a img {
+   vertical-align: middle;
+   margin-right: 6px;
+}
+
+a:hover {
+transform: scale(1.1);
+transition: transform 0.5s ease;
+color: #1DA1F2;
+text-decoration: underline;
+}
+
+.socials {
+     display: flex;
+     flex-direction: column;
+     padding: 5px 10px;
+     margin: 5px 0;
+               }
+
+.pages {
+       display: flex;
+       flex-direction: column;
+       padding: 5px 10px;
+       margin: 5px 0;
+        }
+
+ .social-links {
+       display: flex;
+       flex-direction: column;
+       padding: 5px 10px;
+       margin: 24px 0;
+       margin-right: 15px;
+       align-items: center;
+       justify-content: center;
+       gap: 8px;
+       }
+.social-links a {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin: 10px 0;
-      transition: transform 0.2s ease, color 0.2s ease;
-    }
-    a:hover {
-      color: #1DA1F2;
-      transform: scale(1.05);
-      text-decoration: none;
-    }
-    .section {
-      margin-bottom: 50px;
-    }
-    textarea {
-      width: 80%;
-      max-width: 500px;
-      display: block;
-      margin: 0 auto 10px auto;
-      padding: 8px;
-      border-radius: 4px;
-      border: none;
-      font-size: 16px;
-      resize: vertical;
-    }
-    button {
-      display: block;
-      margin: 0 auto;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      background-color: #1DA1F2;
-      color: black;
-      border: none;
-      border-radius: 4px;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #0d8ddb;
-    }
-    #form-message {
-      margin-top: 15px;
-      font-size: 14px;
-    }
-  </style>
+      gap: 8px; 
+      padding: 5px 0;
+     }
+ .social-links a img {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.bottom {
+       display: flex;
+       flex-direction: column;
+       padding: 5px 10px;
+       margin: 5px 0;
+       margin-right: 15px;
+       }
+
+a:link, a:visited {
+  color: #FFFFFF; 
+}
+
+a:hover, a:focus, a:active {
+  color: #1DA1F2; 
+}
+
+   
+</style>
 </head>
 <body>
+  
 
-  <div class="section">
+  <div class="socials">
     <h1>Socials</h1>
+   <div class="social-links">
     <a href="https://www.tiktok.com/@semtexofficial?_t=ZN-8xfWxJQyvbS&_r=1" target="_blank">
-      <img src="https://pngimg.com/uploads/tiktok/tiktok_PNG4.png" alt="TikTok logo" width="24" style="vertical-align: middle;">
+      <img src="https://pngimg.com/uploads/tiktok/tiktok_PNG4.png" alt="TikTok logo" width="24">
       TikTok
     </a>
-    <a href="https://profile.playstation.com/Myles_Atterbury"
-      <img src="https://logos-world.net/wp-content/uploads/2020/11/PlayStation-Logo.png" alt="PlayStation Logo" width="24" style="vertical-align: middle;">
+    <a href="https://profile.playstation.com/Myles_Atterbury">
+   <img src="https://www.freepnglogos.com/uploads/playstation-png-logo/navy-playstation-png-logo-5.png" alt="PlayStation Logo" width="24" />
       PlayStation
+    </a>
     <a href="https://www.instagram.com/myles_atterbury" target="_blank">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram logo" width="24" style="vertical-align: middle;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram logo" width="24">
       Instagram
     </a>
     <a href="https://github.com/myles14513" target="_blank">
-      <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub logo" width="24" style="vertical-align: middle;">
+      <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub logo" width="24">
       GitHub
     </a>
   </div>
+  </div>
 
-  <div class="section">
+  <div class="contact">
     <h2>Contact me</h2>
+    <div class="contact-info">
     <p>+44 7754 212932</p>
     <a href="mailto:Myles14511@gmail.com">
-      <img src="https://static.vecteezy.com/system/resources/previews/016/716/465/non_2x/gmail-icon-free-png.png" alt="Gmail logo" width="20" style="vertical-align: middle;">
+      <img src="https://static.vecteezy.com/system/resources/previews/016/716/465/non_2x/gmail-icon-free-png.png" alt="Gmail logo" width="20">
       Gmail
     </a>
+<div class="pages">
     <a href="qualifications.html">Qualifications</a>
     <a href="about.html">About me</a>
   </div>
-
+  </div> 
+  </div>
+   <div class="bottom">
   <form id="suggestion-form" name="suggestion" netlify>
     <input type="hidden" name="form-name" value="suggestion" />
-    <label for="suggestion" style="display: block; text-align: center;">Got a suggestion?</label>
-    <textarea id="suggestion" name="Suggestion" rows="6" placeholder="Type your suggestion here..." required></textarea>
+   
+    <label for="suggestion">Got a suggestion?</label><br>
+    <textarea id="suggestion" name="Suggestion" rows="6" placeholder="Type your suggestion here..." required></textarea><br>
     <button type="submit">Send Suggestion</button>
     <div id="form-message"></div>
   </form>
 
+
   <h6>suggestions.myles.me@gmail.com</h6>
   <a href="light.html">Switch to Light mode</a>
   <a href="main.html">Back to main site</a>
-
-  
-  
+</div>
 </body>
 </html>
