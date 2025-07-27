@@ -72,7 +72,33 @@ text-decoration: underline;
        justify-content: center;
        gap: 8px;
        }
+.social-links a {
+      display: flex;
+      align-items: center;
+      gap: 8px; 
+      padding: 5px 0;
+     }
+ .social-links a img {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
 
+.bottom {
+       display: flex;
+       flex-direction: column;
+       padding: 5px 10px;
+       margin: 5px 0;
+       margin-right: 15px;
+       }
+
+a:link, a:visited {
+  color: #FFFFFF; 
+}
+
+a:hover, a:focus, a:active {
+  color: #1DA1F2; 
+}
 
 .sidebar {
   position: fixed;
@@ -110,35 +136,6 @@ text-decoration: underline;
   border-radius: 2px;
 }
 
-.social-links a {
-      display: flex;
-      align-items: center;
-      gap: 8px; 
-      padding: 5px 0;
-     }
- .social-links a img {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-.bottom {
-       display: flex;
-       flex-direction: column;
-       padding: 5px 10px;
-       margin: 5px 0;
-       margin-right: 15px;
-       }
-
-a:link, a:visited {
-  color: #FFFFFF; 
-}
-
-a:hover, a:focus, a:active {
-  color: #1DA1F2; 
-}
-
-
    
 </style>
 </head>
@@ -150,7 +147,7 @@ a:hover, a:focus, a:active {
   <span></span>
 </button>
 
-
+  
 
   <div class="socials">
     <h1>Socials</h1>
@@ -178,7 +175,7 @@ a:hover, a:focus, a:active {
     <h2>Contact me</h2>
     <div class="contact-info">
     <p>+44 7754 212932</p>
-    <a href="mailto:Myles14511@gmail.com">
+    <h6>myles@mylesme.netlify.app</h6>
       <img src="https://static.vecteezy.com/system/resources/previews/016/716/465/non_2x/gmail-icon-free-png.png" alt="Gmail logo" width="20">
       Gmail
     </a>
@@ -199,10 +196,11 @@ a:hover, a:focus, a:active {
   </form>
 
 
-  <h6>suggestions.myles.me@gmail.com</h6>
+  <a href="mailto:myles@mylesme.netlify.app">
   <a href="light.html">Switch to Light mode</a>
   <a href="main.html">Back to main site</a>
 </div>
+
 <div class="sidebar">
   <br><br><h1>Navigation<h1>
       <a href="main.html">🏠Home</a><br>
@@ -221,6 +219,7 @@ a:hover, a:focus, a:active {
     sidebar.classList.toggle('active');
   });
 </script>
-</body>
+
+
 </body>
 </html>
