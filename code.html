@@ -1,167 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mini VS Code Editor with Files</title>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mini VS Code Editor (Firebase)</title>
 <style>
-  /* (Your existing CSS unchanged for brevity) */
-  * { box-sizing: border-box; }
+  /* VS Code Dark Theme Inspired */
+  @import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
+
+  * {
+    box-sizing: border-box;
+  }
+
   body, html {
     margin: 0; height: 100%;
-    font-family: 'Segoe UI', sans-serif;
-    background: #1e1e1e; color: #ddd;
+    font-family: 'Fira Code', monospace;
+    background-color: #1e1e1e;
+    color: #d4d4d4;
     display: flex;
+    user-select: none;
+    overflow: hidden;
   }
+
   #sidebar {
-    width: 220px;
-    background: #252526;
+    width: 240px;
+    background-color: #252526;
     display: flex;
     flex-direction: column;
     padding: 10px;
-    color: #ccc;
-    user-select: none;
+    border-right: 1px solid #333;
   }
+
   #sidebar h2 {
     margin: 0 0 15px;
+    font-weight: 600;
     font-size: 18px;
+    color: #cccccc;
+    user-select: none;
   }
+
   #sidebar .files-section {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
   }
+
   #sidebar .files-section h3 {
-    margin: 5px 0;
-    font-weight: normal;
+    margin: 0 0 8px;
+    font-weight: 500;
+    font-size: 15px;
+    color: #9cdcfe;
   }
-  #sidebar button, #sidebar input[type=text] {
-    margin: 5px 0;
-    padding: 8px;
-    background: #3a3d41;
+
+  #sidebar input[type=text] {
+    width: 100%;
+    padding: 6px 8px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
     border: none;
-    color: #ccc;
+    border-radius: 3px;
+    margin-bottom: 8px;
+  }
+
+  #sidebar input[type=text]:focus {
+    outline: 1px solid #007acc;
+  }
+
+  #sidebar button, #sidebar ul li button.delete-file {
+    background-color: #0e639c;
+    border: none;
+    color: #fff;
     cursor: pointer;
     border-radius: 3px;
-    font-size: 14px;
-    width: 100%;
+    font-size: 13px;
+    padding: 6px 10px;
+    user-select: none;
+    transition: background-color 0.2s ease;
   }
-  #sidebar button:hover {
-    background: #505357;
+
+  #sidebar button:hover, #sidebar ul li button.delete-file:hover {
+    background-color: #1177cc;
   }
-  #sidebar input[type=text] {
-    color: #000;
-    cursor: text;
-  }
+
   #sidebar ul {
     list-style: none;
+    margin: 0;
     padding-left: 0;
-    max-height: 120px;
+    max-height: 130px;
     overflow-y: auto;
-    margin: 5px 0 10px;
-    border: 1px solid #444;
+    border: 1px solid #333;
     border-radius: 3px;
+    background-color: #1e1e1e;
   }
+
   #sidebar ul li {
     padding: 5px 8px;
-    cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-  #sidebar ul li.active {
-    background: #0e639c;
-    color: white;
-  }
-  #sidebar ul li:hover:not(.active) {
-    background: #444;
-  }
-  #sidebar ul li button.delete-file {
-    background: transparent;
-    border: none;
-    color: #ccc;
-    font-weight: bold;
+    font-size: 13px;
+    color: #d4d4d4;
     cursor: pointer;
-    font-size: 14px;
+    user-select: text;
   }
+
+  #sidebar ul li:hover:not(.active) {
+    background-color: #2a2d2e;
+  }
+
+  #sidebar ul li.active {
+    background-color: #094771;
+    color: #ffffff;
+  }
+
+  #sidebar ul li button.delete-file {
+    background: none;
+    color: #d4d4d4;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    padding: 0 5px;
+  }
+
   #main {
     flex: 1;
     display: flex;
     flex-direction: column;
   }
+
   #tabs {
-    background: #252526;
     display: flex;
+    background-color: #252526;
+    border-bottom: 1px solid #333;
   }
+
   #tabs button {
-    flex: 1;
-    background: #252526;
+    background-color: #252526;
+    color: #cccccc;
     border: none;
-    color: #ccc;
-    padding: 10px;
+    padding: 12px 16px;
     cursor: pointer;
-    font-size: 16px;
-    border-bottom: 2px solid transparent;
+    font-weight: 500;
+    font-size: 14px;
+    user-select: none;
+    transition: background-color 0.2s ease;
   }
+
+  #tabs button:hover {
+    background-color: #333333;
+  }
+
   #tabs button.active {
-    border-bottom: 2px solid #0e639c;
-    background: #1e1e1e;
-    color: #fff;
+    background-color: #1e1e1e;
+    border-bottom: 2px solid #007acc;
+    color: #ffffff;
+    font-weight: 600;
   }
+
   #editor-container {
     flex: 1;
+    position: relative;
     display: flex;
     flex-direction: column;
-    position: relative;
   }
+
   textarea {
     flex: 1;
-    background: #1e1e1e;
-    border: none;
-    color: #ddd;
-    font-family: monospace;
-    font-size: 14px;
-    padding: 10px;
-    resize: none;
-    outline: none;
     width: 100%;
-    height: 100%;
+    border: none;
+    resize: none;
+    padding: 15px;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    outline: none;
+    line-height: 1.4em;
+    user-select: text;
   }
+
   #edit-buttons {
-    background: #252526;
-    padding: 5px 10px;
+    background-color: #252526;
+    padding: 8px 12px;
     display: flex;
     gap: 10px;
+    border-top: 1px solid #333;
   }
+
   #edit-buttons button {
-    background: #3a3d41;
+    background-color: #0e639c;
     border: none;
-    color: #ccc;
-    padding: 5px 12px;
+    color: white;
+    padding: 6px 14px;
     border-radius: 3px;
+    font-size: 13px;
     cursor: pointer;
-    font-size: 14px;
+    user-select: none;
+    transition: background-color 0.2s ease;
   }
+
   #edit-buttons button:hover {
-    background: #505357;
+    background-color: #1177cc;
   }
+
   #preview {
-    height: 250px;
+    height: 280px;
     border: none;
-    background: white;
     margin-top: 10px;
+    background: white;
+    border-radius: 3px;
   }
+
+  /* Scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1e1e1e;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #444;
+    border-radius: 4px;
+  }
+
 </style>
 </head>
 <body>
 
 <div id="sidebar">
   <h2>Editor Controls</h2>
-  <button id="btn-save">Save (all files)</button>
-  <button id="btn-load">Load (all files)</button>
+  <button id="btn-save">Save (all files remotely)</button>
+  <button id="btn-load">Load (all files remotely)</button>
   <button id="btn-run">Run</button>
   <hr style="border-color:#444;">
-  <small style="color:#666;">On PS5: use buttons to insert tab or newline</small>
+  <small style="color:#666;">Use buttons to insert tab or newline</small>
 
   <hr style="border-color:#444; margin: 15px 0;">
-  
+
   <div class="files-section" data-lang="html">
     <h3>HTML Files</h3>
     <input type="text" placeholder="New HTML file name" id="new-file-html" />
@@ -203,44 +278,34 @@
 </div>
 
 <script>
-  // State: files per language, current file per language
-  const files = {
-    html: {},
-    css: {},
-    js: {}
-  };
-  const currentFile = {
-    html: null,
-    css: null,
-    js: null
-  };
+  // Files state
+  const files = { html: {}, css: {}, js: {} };
+  const currentFile = { html: null, css: null, js: null };
 
-  // Elements
+  // UI elements
   const tabs = {
     html: document.getElementById('tab-html'),
     css: document.getElementById('tab-css'),
     js: document.getElementById('tab-js')
   };
+
   const editors = {
     html: document.getElementById('editor-html'),
     css: document.getElementById('editor-css'),
     js: document.getElementById('editor-js')
   };
 
-  // Current tab state
   let current = 'html';
 
-  // Initialize UI and tab switching
   function switchTab(tab) {
     for (const key in tabs) {
       tabs[key].classList.toggle('active', key === tab);
       editors[key].style.display = (key === tab) ? 'block' : 'none';
     }
-    current = tab;
     loadCurrentFile(tab);
+    current = tab;
   }
 
-  // Load current file content into editor
   function loadCurrentFile(lang) {
     if(currentFile[lang] && files[lang][currentFile[lang]] !== undefined){
       editors[lang].value = files[lang][currentFile[lang]];
@@ -249,7 +314,6 @@
     }
   }
 
-  // Save editor content to current file
   function saveCurrentFile(lang) {
     if(currentFile[lang]) {
       files[lang][currentFile[lang]] = editors[lang].value;
@@ -257,7 +321,6 @@
     }
   }
 
-  // Update file list UI for language
   function updateFileList(lang) {
     const ul = document.getElementById(`file-list-${lang}`);
     ul.innerHTML = '';
@@ -266,18 +329,14 @@
       li.textContent = fname;
       if (currentFile[lang] === fname) li.classList.add('active');
 
-      // Click to select file
       li.onclick = () => {
-        saveCurrentFile(lang); // save current before switching
+        saveCurrentFile(lang);
         currentFile[lang] = fname;
         loadCurrentFile(lang);
         updateFileList(lang);
-        if(lang === current) {
-          editors[lang].focus();
-        }
+        if(lang === current) editors[lang].focus();
       };
 
-      // Delete button
       const delBtn = document.createElement('button');
       delBtn.textContent = '×';
       delBtn.title = 'Delete file';
@@ -288,18 +347,15 @@
           delete files[lang][fname];
           if(currentFile[lang] === fname) currentFile[lang] = null;
           updateFileList(lang);
-          if(lang === current) {
-            editors[lang].value = '';
-          }
+          if(lang === current) editors[lang].value = '';
         }
       };
-      li.appendChild(delBtn);
 
+      li.appendChild(delBtn);
       ul.appendChild(li);
     });
   }
 
-  // Add new file for language
   function addFile(lang, name) {
     if(!name) {
       alert('Please enter a file name');
@@ -309,7 +365,7 @@
       alert('File already exists');
       return;
     }
-    saveCurrentFile(current); // save current file before switching
+    saveCurrentFile(current);
 
     files[lang][name] = '';
     currentFile[lang] = name;
@@ -320,7 +376,6 @@
     }
   }
 
-  // Insert text at cursor helper
   function insertAtCursor(textarea, text) {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
@@ -330,72 +385,56 @@
     textarea.focus();
   }
 
-  // Save/load all files to/from localStorage
-  function saveAllLocal() {
-    for(const lang of ['html','css','js']) {
-      saveCurrentFile(lang);
-    }
-    localStorage.setItem('files', JSON.stringify(files));
-    localStorage.setItem('currentFile', JSON.stringify(currentFile));
-    alert('All files saved locally!');
-  }
-  function loadAllLocal() {
-    const f = localStorage.getItem('files');
-    const c = localStorage.getItem('currentFile');
-    if(f && c) {
-      Object.assign(files, JSON.parse(f));
-      Object.assign(currentFile, JSON.parse(c));
-      for(const lang of ['html','css','js']){
-        updateFileList(lang);
-        if(!currentFile[lang] && Object.keys(files[lang]).length > 0) {
-          currentFile[lang] = Object.keys(files[lang])[0];
-        }
-      }
-      switchTab(current);
-      alert('All files loaded from localStorage!');
-    } else {
-      alert('No saved files found locally.');
-    }
-  }
-
-  // Remote save/load Firebase
+  // Save all files remotely on Firebase
   function saveRemote(code) {
-    saveAllLocal(); // ensure latest saved locally first
     const trimmedCode = code.trim();
+    if(!trimmedCode) {
+      alert('Please enter a valid save code.');
+      return;
+    }
+    for(const lang of ['html','css','js']) saveCurrentFile(lang);
     fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${encodeURIComponent(trimmedCode)}.json`, {
       method: 'PUT',
       body: JSON.stringify({ files, currentFile })
     })
     .then(response => {
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      alert(`Saved all files at code: ${trimmedCode}`);
+      if(!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      localStorage.setItem('lastRemoteCode', trimmedCode);
+      alert(`Saved all files remotely at code: ${trimmedCode}`);
     })
     .catch(err => {
       alert('Error saving remotely: ' + err.message);
       console.error(err);
     });
   }
+
+  // Load all files remotely from Firebase
   function loadRemote(code) {
     const trimmedCode = code.trim();
+    if(!trimmedCode) {
+      alert('Please enter a valid load code.');
+      return;
+    }
     fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${encodeURIComponent(trimmedCode)}.json`)
-      .then(response => {
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return response.json();
+      .then(r => {
+        if(!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+        return r.json();
       })
       .then(data => {
         if(data && data.files && data.currentFile) {
-          Object.assign(files, data.files);
-          Object.assign(currentFile, data.currentFile);
-          for(const lang of ['html','css','js']) {
-            updateFileList(lang);
-            if(!currentFile[lang] && Object.keys(files[lang]).length > 0) {
-              currentFile[lang] = Object.keys(files[lang])[0];
-            }
+          // Clear current files before loading
+          for (const lang of ['html','css','js']) {
+            files[lang] = data.files[lang] || {};
+            currentFile[lang] = data.currentFile[lang] || (Object.keys(files[lang])[0] || null);
           }
-          switchTab(current);
-          alert('All files loaded from remote!');
+          // Select first non-null tab to switch to
+          let firstTab = ['html','css','js'].find(l => currentFile[l]);
+          if(!firstTab) firstTab = 'html';
+          switchTab(firstTab);
+          alert('Loaded all files remotely!');
+          localStorage.setItem('lastRemoteCode', trimmedCode);
         } else {
-          alert('No code found.');
+          alert('No code found for that save code.');
         }
       })
       .catch(err => {
@@ -404,27 +443,17 @@
       });
   }
 
-  // Setup event listeners for add file buttons
-  document.querySelectorAll('.btn-add-file').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const lang = btn.dataset.lang;
-      const input = document.getElementById(`new-file-${lang}`);
-      addFile(lang, input.value.trim());
-      input.value = '';
-    });
-  });
+  // Buttons
+  document.getElementById('btn-save').onclick = () => {
+    const code = prompt('Enter a shareable save code (e.g. "myproject")');
+    if(code) saveRemote(code);
+  };
 
-  // Tab switching
-  Object.keys(tabs).forEach(key => tabs[key].onclick = () => {
-    saveCurrentFile(current);
-    switchTab(key);
-  });
+  document.getElementById('btn-load').onclick = () => {
+    const code = prompt('Enter a shareable load code');
+    if(code) loadRemote(code);
+  };
 
-  // Insert buttons
-  document.getElementById('btn-tab').onclick = () => insertAtCursor(editors[current], '  ');
-  document.getElementById('btn-newline').onclick = () => insertAtCursor(editors[current], '\n');
-
-  // Run button
   document.getElementById('btn-run').onclick = () => {
     saveCurrentFile(current);
     const htmlCode = Object.values(files.html).join('\n') || editors.html.value;
@@ -434,38 +463,49 @@
     document.getElementById('preview').srcdoc = htmlCode + cssCode + jsCode;
   };
 
-  // Save/load local or remote buttons
-  document.getElementById('btn-save').onclick = () => {
-    const code = prompt('Enter a shareable code to save remotely (or Cancel to save locally only):');
-    if(code && code.trim()) {
-      saveRemote(code);
-    } else {
-      saveAllLocal();
-    }
-  };
-  document.getElementById('btn-load').onclick = () => {
-    const code = prompt('Enter shareable code to load remotely (or Cancel to load locally):');
-    if(code && code.trim()) {
-      loadRemote(code);
-    } else {
-      loadAllLocal();
-    }
-  };
+  // Add new file buttons
+  document.querySelectorAll('.btn-add-file').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const lang = btn.dataset.lang;
+      const input = document.getElementById(`new-file-${lang}`);
+      addFile(lang, input.value.trim());
+      input.value = '';
+    });
+  });
+
+  // Tabs switching
+  Object.keys(tabs).forEach(key => {
+    tabs[key].onclick = () => {
+      saveCurrentFile(current);
+      switchTab(key);
+    };
+  });
+
+  // Insert tab/newline buttons
+  document.getElementById('btn-tab').onclick = () => insertAtCursor(editors[current], '  ');
+  document.getElementById('btn-newline').onclick = () => insertAtCursor(editors[current], '\n');
 
   // Initial default files
-  files.html['index.html'] = "<!-- HTML here -->\n<div>Hello!</div>";
+  files.html['index.html'] = "<!-- HTML here -->\n<div>Hello, Visual Studio Code style!</div>";
   currentFile.html = 'index.html';
-  files.css['style.css'] = "body { color: darkblue; }";
+  files.css['style.css'] = "body { color: #569CD6; background-color: #1e1e1e; }";
   currentFile.css = 'style.css';
   files.js['script.js'] = "console.log('JS ready!');";
   currentFile.js = 'script.js';
 
-  // Init UI
-  for(const lang of ['html','css','js']) {
-    updateFileList(lang);
-  }
+  // Initial UI update and tab switch
+  for(const lang of ['html','css','js']) updateFileList(lang);
   switchTab(current);
 
+  // On load, auto load last used code if any (optional)
+  window.addEventListener('load', () => {
+    const lastCode = localStorage.getItem('lastRemoteCode');
+    if(lastCode) {
+      if(confirm(`Load your last project: "${lastCode}"?`)) {
+        loadRemote(lastCode);
+      }
+    }
+  });
 </script>
 
 </body>
