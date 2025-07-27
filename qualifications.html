@@ -57,6 +57,7 @@
   height: 100%;
   background-color: #111;
   transition: left 0.3s ease;
+  
 }
 
 .sidebar.active {
@@ -68,7 +69,7 @@
   top: 10px;
   left: 10px;
   padding: 10px 15px;
-  background-color: #333;
+  background-color: #111;
   color: white;
   border: none;
   cursor: pointer;
@@ -84,11 +85,17 @@
   margin: 4px 0;       
   border-radius: 2px;
 }
-    
-    
+
   </style>
 </head>
 <body>
+
+  <button id="menu" aria-label="Menu">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
 
   <div class="images">
     <h1>My Qualifications</h1>
@@ -98,10 +105,26 @@
   </div>
   
 
-  <div class="options">
-    <a href="index.html">Back to Main Site</a><br>
-    <a href="lightqualifications.html">Switch to Light Mode</a>
-  </div>
+ 
+  
+      <div class="sidebar">
+  <br><br><h1>Navigation<h1>
+      <a href="main.html">🏠Home</a><br>
+    <a href="about.html">👤 About Me</a>
+    <a href="index.html"> ℹ️ Info</a>
+    <a href="about.html">🌞 Switch to Light Mode</a>
+</div>
+
+<!-- other content -->
+
+<script>
+  const menuButton = document.getElementById('menu');
+  const sidebar = document.querySelector('.sidebar');
+
+  menuButton.addEventListener('click', function() {
+    sidebar.classList.toggle('active');
+  });
+</script>
 
 </body>
 </html>
