@@ -4,6 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mini VS Code Editor with Files</title>
 <style>
+  /* (Your existing CSS unchanged for brevity) */
   * { box-sizing: border-box; }
   body, html {
     margin: 0; height: 100%;
@@ -202,11 +203,19 @@
 </div>
 
 <script>
-  // Files data and current file trackers
-  const files = { html: {}, css: {}, js: {} };
-  const currentFile = { html: null, css: null, js: null };
+  // State: files per language, current file per language
+  const files = {
+    html: {},
+    css: {},
+    js: {}
+  };
+  const currentFile = {
+    html: null,
+    css: null,
+    js: null
+  };
 
-  // UI elements for tabs and editors
+  // Elements
   const tabs = {
     html: document.getElementById('tab-html'),
     css: document.getElementById('tab-css'),
@@ -218,29 +227,29 @@
     js: document.getElementById('editor-js')
   };
 
-  let current = 'html'; // current tab
+  // Current tab state
+  let current = 'html';
 
-  // Switch editor tab and load file content
-  function switchTab(lang) {
-    saveCurrentFile(current);
-    current = lang;
+  // Initialize UI and tab switching
+  function switchTab(tab) {
     for (const key in tabs) {
-      tabs[key].classList.toggle('active', key === lang);
-      editors[key].style.display = (key === lang) ? 'block' : 'none';
+      tabs[key].classList.toggle('active', key === tab);
+      editors[key].style.display = (key === tab) ? 'block' : 'none';
     }
-    loadCurrentFile(lang);
+    current = tab;
+    loadCurrentFile(tab);
   }
 
-  // Load content of current file for given language
+  // Load current file content into editor
   function loadCurrentFile(lang) {
-    if(currentFile[lang] && files[lang][currentFile[lang]] !== undefined) {
+    if(currentFile[lang] && files[lang][currentFile[lang]] !== undefined){
       editors[lang].value = files[lang][currentFile[lang]];
     } else {
       editors[lang].value = '';
     }
   }
 
-  // Save content of editor to current file for lang
+  // Save editor content to current file
   function saveCurrentFile(lang) {
     if(currentFile[lang]) {
       files[lang][currentFile[lang]] = editors[lang].value;
@@ -255,35 +264,42 @@
     Object.keys(files[lang]).forEach(fname => {
       const li = document.createElement('li');
       li.textContent = fname;
-      if(currentFile[lang] === fname) li.classList.add('active');
+      if (currentFile[lang] === fname) li.classList.add('active');
 
+      // Click to select file
       li.onclick = () => {
-        saveCurrentFile(lang);
+        saveCurrentFile(lang); // save current before switching
         currentFile[lang] = fname;
         loadCurrentFile(lang);
         updateFileList(lang);
-        if(lang === current) editors[lang].focus();
+        if(lang === current) {
+          editors[lang].focus();
+        }
       };
 
+      // Delete button
       const delBtn = document.createElement('button');
       delBtn.textContent = '×';
       delBtn.title = 'Delete file';
       delBtn.className = 'delete-file';
-      delBtn.onclick = e => {
+      delBtn.onclick = (e) => {
         e.stopPropagation();
         if(confirm(`Delete file "${fname}"?`)) {
           delete files[lang][fname];
           if(currentFile[lang] === fname) currentFile[lang] = null;
           updateFileList(lang);
-          if(lang === current) editors[lang].value = '';
+          if(lang === current) {
+            editors[lang].value = '';
+          }
         }
       };
       li.appendChild(delBtn);
+
       ul.appendChild(li);
     });
   }
 
-  // Add new file
+  // Add new file for language
   function addFile(lang, name) {
     if(!name) {
       alert('Please enter a file name');
@@ -293,7 +309,8 @@
       alert('File already exists');
       return;
     }
-    saveCurrentFile(current);
+    saveCurrentFile(current); // save current file before switching
+
     files[lang][name] = '';
     currentFile[lang] = name;
     updateFileList(lang);
@@ -303,7 +320,7 @@
     }
   }
 
-  // Insert text helper
+  // Insert text at cursor helper
   function insertAtCursor(textarea, text) {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
@@ -313,9 +330,11 @@
     textarea.focus();
   }
 
-  // Save/load all files locally
+  // Save/load all files to/from localStorage
   function saveAllLocal() {
-    for(const lang of ['html', 'css', 'js']) saveCurrentFile(lang);
+    for(const lang of ['html','css','js']) {
+      saveCurrentFile(lang);
+    }
     localStorage.setItem('files', JSON.stringify(files));
     localStorage.setItem('currentFile', JSON.stringify(currentFile));
     alert('All files saved locally!');
@@ -326,7 +345,7 @@
     if(f && c) {
       Object.assign(files, JSON.parse(f));
       Object.assign(currentFile, JSON.parse(c));
-      for(const lang of ['html','css','js']) {
+      for(const lang of ['html','css','js']){
         updateFileList(lang);
         if(!currentFile[lang] && Object.keys(files[lang]).length > 0) {
           currentFile[lang] = Object.keys(files[lang])[0];
@@ -339,37 +358,53 @@
     }
   }
 
-  // Remote save/load to Firebase
+  // Remote save/load Firebase
   function saveRemote(code) {
-    saveAllLocal();
-    fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`, {
+    saveAllLocal(); // ensure latest saved locally first
+    const trimmedCode = code.trim();
+    fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${encodeURIComponent(trimmedCode)}.json`, {
       method: 'PUT',
       body: JSON.stringify({ files, currentFile })
-    }).then(_ => alert(`Saved all files at code: ${code}`))
-    .catch(() => alert('Error saving remotely'));
+    })
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      alert(`Saved all files at code: ${trimmedCode}`);
+    })
+    .catch(err => {
+      alert('Error saving remotely: ' + err.message);
+      console.error(err);
+    });
   }
   function loadRemote(code) {
-    fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`)
-    .then(r => r.json())
-    .then(data => {
-      if(data && data.files && data.currentFile) {
-        Object.assign(files, data.files);
-        Object.assign(currentFile, data.currentFile);
-        for(const lang of ['html','css','js']) {
-          updateFileList(lang);
-          if(!currentFile[lang] && Object.keys(files[lang]).length > 0) {
-            currentFile[lang] = Object.keys(files[lang])[0];
+    const trimmedCode = code.trim();
+    fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${encodeURIComponent(trimmedCode)}.json`)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if(data && data.files && data.currentFile) {
+          Object.assign(files, data.files);
+          Object.assign(currentFile, data.currentFile);
+          for(const lang of ['html','css','js']) {
+            updateFileList(lang);
+            if(!currentFile[lang] && Object.keys(files[lang]).length > 0) {
+              currentFile[lang] = Object.keys(files[lang])[0];
+            }
           }
+          switchTab(current);
+          alert('All files loaded from remote!');
+        } else {
+          alert('No code found.');
         }
-        switchTab(current);
-        alert('All files loaded from remote!');
-      } else {
-        alert('No code found.');
-      }
-    }).catch(() => alert('Error loading remotely'));
+      })
+      .catch(err => {
+        alert('Error loading remotely: ' + err.message);
+        console.error(err);
+      });
   }
 
-  // Setup add file buttons
+  // Setup event listeners for add file buttons
   document.querySelectorAll('.btn-add-file').forEach(btn => {
     btn.addEventListener('click', () => {
       const lang = btn.dataset.lang;
@@ -379,12 +414,13 @@
     });
   });
 
-  // Tabs click handlers
-  Object.keys(tabs).forEach(key => {
-    tabs[key].onclick = () => switchTab(key);
+  // Tab switching
+  Object.keys(tabs).forEach(key => tabs[key].onclick = () => {
+    saveCurrentFile(current);
+    switchTab(key);
   });
 
-  // Insert tab/newline buttons
+  // Insert buttons
   document.getElementById('btn-tab').onclick = () => insertAtCursor(editors[current], '  ');
   document.getElementById('btn-newline').onclick = () => insertAtCursor(editors[current], '\n');
 
@@ -394,28 +430,29 @@
     const htmlCode = Object.values(files.html).join('\n') || editors.html.value;
     const cssCode = Object.values(files.css).map(c => `<style>${c}</style>`).join('\n') || `<style>${editors.css.value}</style>`;
     const jsCode = Object.values(files.js).map(js => `<script>${js}<\/script>`).join('\n') || `<script>${editors.js.value}<\/script>`;
+
     document.getElementById('preview').srcdoc = htmlCode + cssCode + jsCode;
   };
 
-  // Save/load buttons
+  // Save/load local or remote buttons
   document.getElementById('btn-save').onclick = () => {
-    const code = prompt('Enter a shareable code to save remotely (or cancel to save locally only):');
-    if(code) {
+    const code = prompt('Enter a shareable code to save remotely (or Cancel to save locally only):');
+    if(code && code.trim()) {
       saveRemote(code);
     } else {
       saveAllLocal();
     }
   };
   document.getElementById('btn-load').onclick = () => {
-    const code = prompt('Enter shareable code to load remotely (or cancel to load locally):');
-    if(code) {
+    const code = prompt('Enter shareable code to load remotely (or Cancel to load locally):');
+    if(code && code.trim()) {
       loadRemote(code);
     } else {
       loadAllLocal();
     }
   };
 
-  // Default starter files
+  // Initial default files
   files.html['index.html'] = "<!-- HTML here -->\n<div>Hello!</div>";
   currentFile.html = 'index.html';
   files.css['style.css'] = "body { color: darkblue; }";
@@ -424,8 +461,11 @@
   currentFile.js = 'script.js';
 
   // Init UI
-  for(const lang of ['html', 'css', 'js']) updateFileList(lang);
+  for(const lang of ['html','css','js']) {
+    updateFileList(lang);
+  }
   switchTab(current);
+
 </script>
 
 </body>
