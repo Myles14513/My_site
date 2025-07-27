@@ -1,121 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Code Runner</title>
-  <style>
-    body {
-      background-color: #1e1e1e;
-      color: #d4d4d4;
-      font-family: Consolas, monospace;
-      padding: 20px;
-    }
-
-    textarea {
-      width: 100%;
-      height: 300px;
-      background-color: #1e1e1e;
-      color: #d4d4d4;
-      border: 1px solid #555;
-      border-radius: 5px;
-      padding: 10px;
-      font-size: 14px;
-      resize: vertical;
-    }
-
-    button, input {
-      margin-top: 10px;
-      padding: 10px;
-      font-size: 14px;
-      border-radius: 5px;
-      border: none;
-    }
-
-    button {
-      background-color: #007acc;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #005fa3;
-    }
-
-    input[type="text"] {
-      width: 150px;
-      margin-left: 10px;
-      background-color: #252526;
-      color: #d4d4d4;
-      border: 1px solid #555;
-    }
-
-    iframe {
-      margin-top: 20px;
-      width: 100%;
-      height: 300px;
-      border: 1px solid #555;
-      border-radius: 5px;
-      background: white;
-    }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini VS Code Editor</title>
+<style>
+  /* your existing styles (unchanged) */
+  * { box-sizing: border-box; }
+  body, html { margin: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: #1e1e1e; color: #ddd; display: flex; }
+  #sidebar { width: 200px; background: #252526; display: flex; flex-direction: column; padding:10px; color:#ccc; user-select: none; }
+  #sidebar h2 { margin:0 0 15px; font-size: 18px; }
+  #sidebar button { margin:5px 0; padding:8px; background:#3a3d41; border:none; color:#ccc; cursor:pointer; border-radius:3px; font-size:14px; }
+  #sidebar button:hover { background:#505357; }
+  #main { flex:1; display:flex; flex-direction:column; }
+  #tabs { background:#252526; display:flex; }
+  #tabs button { flex:1; background:#252526; border:none; color:#ccc; padding:10px; cursor:pointer; font-size:16px; border-bottom:2px solid transparent; }
+  #tabs button.active { border-bottom:2px solid #0e639c; background:#1e1e1e; color:#fff; }
+  textarea { flex:1; background:#1e1e1e; border:none; color:#ddd; font-family:monospace; font-size:14px; padding:10px; resize:none; outline:none; width:100%; height:100%; }
+  #editor-container { flex:1; display:flex; flex-direction:column; }
+  #edit-buttons { background:#252526; padding:5px 10px; display:flex; gap:10px; }
+  #edit-buttons button { background:#3a3d41; border:none; color:#ccc; padding:5px 12px; border-radius:3px; cursor:pointer; font-size:14px; }
+  #edit-buttons button:hover { background:#505357; }
+  #preview { height:200px; border:none; background:white; margin-top:10px; }
+</style>
 </head>
 <body>
 
-  <h2>Code Runner</h2>
+<div id="sidebar">
+  <h2>Editor Controls</h2>
+  <button id="btn-save">Save (code)</button>
+  <button id="btn-load">Load (code)</button>
+  <button id="btn-run">Run</button>
+  <hr style="border-color:#444;">
+  <small style="color:#666;">On PS5: use the buttons to insert tab or newline</small>
+</div>
 
-  <textarea id="editor" placeholder="Write your HTML/JS here..."></textarea><br>
-
-  <button onclick="runCode()">Run</button>
-  <button onclick="saveCode()">Save Code</button>
-
-  <input type="text" id="loadCodeInput" placeholder="Enter code to load">
-  <button onclick="loadCode()">Load Code</button>
-
+<div id="main">
+  <div id="tabs">
+    <button id="tab-html" class="active">HTML</button>
+    <button id="tab-css">CSS</button>
+    <button id="tab-js">JS</button>
+  </div>
+  <div id="editor-container">
+    <textarea id="editor-html" placeholder="Write HTML here..."></textarea>
+    <textarea id="editor-css" placeholder="Write CSS here..." style="display:none;"></textarea>
+    <textarea id="editor-js" placeholder="Write JavaScript here..." style="display:none;"></textarea>
+    <div id="edit-buttons">
+      <button id="btn-tab">Insert Tab</button>
+      <button id="btn-newline">Insert Newline</button>
+    </div>
+  </div>
   <iframe id="preview"></iframe>
+</div>
 
-  <script>
-    function generateCode(length = 4) {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let code = '';
-      for (let i = 0; i < length; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
-    }
+<script>
+// helper insert
+function insertAtCursor(txt, str) {
+  const s = txt.selectionStart, e = txt.selectionEnd;
+  txt.value = txt.value.slice(0, s) + str + txt.value.slice(e);
+  txt.selectionStart = txt.selectionEnd = s + str.length;
+  txt.focus();
+}
 
-    function runCode() {
-      const code = document.getElementById('editor').value;
-      const iframe = document.getElementById('preview');
-      iframe.srcdoc = code;
-    }
+// tabs
+const tabs = { html:document.getElementById('tab-html'), css:document.getElementById('tab-css'), js:document.getElementById('tab-js') };
+const editors = { html:document.getElementById('editor-html'), css:document.getElementById('editor-css'), js:document.getElementById('editor-js') };
+let current = 'html';
+Object.keys(tabs).forEach(key => tabs[key].onclick = () => {
+  current = key;
+  Object.keys(editors).forEach(k => {
+    editors[k].style.display = k===key?'block':'none';
+    tabs[k].classList.toggle('active', k===key);
+  });
+});
 
-    function saveCode() {
-      const codeContent = document.getElementById('editor').value;
-      const code = generateCode();
+// insert buttons
+document.getElementById('btn-tab').onclick = () => insertAtCursor(editors[current], '  ');
+document.getElementById('btn-newline').onclick = () => insertAtCursor(editors[current], '\n');
 
-      fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`, {
-        method: 'PUT',
-        body: JSON.stringify({ code: codeContent })
-      }).then(() => {
-        alert(`✅ Code saved! Your code is: ${code}`);
-      });
-    }
+// run code integration
+document.getElementById('btn-run').onclick = () => {
+  const html = editors.html.value;
+  const css = `<style>${editors.css.value}</style>`;
+  const js  = `<script>${editors.js.value}<\/script>`;
+  document.getElementById('preview').srcdoc = html + css + js;
+};
 
-    function loadCode() {
-      const code = document.getElementById('loadCodeInput').value.toUpperCase();
+// local save/load
+document.getElementById('btn-save').onclick = () => {
+  localStorage.setItem('code-html', editors.html.value);
+  localStorage.setItem('code-css', editors.css.value);
+  localStorage.setItem('code-js', editors.js.value);
+  const code = prompt('Shareable code:', '');
+  if(!code) return;
+  saveRemote(code);
+};
+document.getElementById('btn-load').onclick = () => {
+  const code = prompt('Enter shareable code:', '');
+  if(code) loadRemote(code);
+};
 
-      fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.code) {
-            document.getElementById('editor').value = data.code;
-            runCode();
-          } else {
-            alert('❌ Code not found.');
-          }
-        });
-    }
-  </script>
+// remote save/load Firebase
+function saveRemote(code) {
+  const payload = {
+    html: editors.html.value,
+    css: editors.css.value,
+    js: editors.js.value
+  };
+  fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`, {
+    method: 'PUT', body: JSON.stringify(payload)
+  }).then(_ => alert(`Saved at code: ${code}`));
+}
+function loadRemote(code) {
+  fetch(`https://code-runner-ae31e-default-rtdb.firebaseio.com/snippets/${code}.json`)
+    .then(r => r.json()).then(data => {
+      if(data) {
+        editors.html.value = data.html || '';
+        editors.css.value = data.css || '';
+        editors.js.value = data.js || '';
+        tabs.html.click();
+        document.getElementById('btn-run').click();
+      } else alert('No code found.');
+    });
+}
+
+// prefill
+editors.html.value = "<!-- HTML here -->\n<div>Hello!</div>";
+editors.css.value  = "body { color: darkblue; }";
+editors.js.value   = "console.log('JS ready!');";
+tabs.html.click();
+</script>
 
 </body>
 </html>
