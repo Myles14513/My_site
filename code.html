@@ -546,6 +546,18 @@
       });
   });
 
+// Add save button listener
+document.getElementById('btn-save-remote').onclick = () => {
+  const code = prompt('Enter a shareable code to save remotely:');
+  if (code) saveRemote(code);
+};
+
+// Add load button listener
+document.getElementById('btn-load-remote').onclick = () => {
+  const code = prompt('Enter shareable code to load remotely:');
+  if (code) loadRemote(code);
+};
+
   // Initial welcome file
   addFile('index.html');
   files['index.html'].content = "<!-- Start coding here -->\n<div>Hello world!</div>";
