@@ -3,42 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>About Me - Myles.me</title>
+  <title>About Me - Myles.me (Light Mode)</title>
   <style>
     body {
-      background-color: white;
-      color: black;
-      font-family: monospace, Arial, sans-serif;
       text-align: center;
-      padding: 60px 20px;
-      line-height: 1.6;
+      background-color: #FFFFFF;
+      color: #000000; 
       margin: 0;
+      font-family: Arial, sans-serif;
+      padding: 20px;
     }
 
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    a.back-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      color: black;
+    a {
+      padding: 5px 10px;
+      display: inline-block;
+      margin: 5px 0;
       text-decoration: none;
-      font-size: 18px;
-      margin-top: 30px;
-      transition: color 0.2s ease, transform 0.2s ease;
+      color: #000000;
     }
 
-    a.back-link:hover {
-      color: cyan;
-      transform: scale(1.05);
-    }
-
-    a.back-link svg {
-      vertical-align: middle;
+    a:hover {
+      transform: scale(1.1);
+      transition: transform 0.5s ease;
+      color: #1DA1F2;
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -51,14 +39,8 @@
       I made this website to try out my skills and see what I can build, it can help others find me. I’m pretty proud of it and can’t wait to keep getting better! I have mostly done this site from my phone but some on a school laptop. I hope I will be able to buy myself a laptop soon!
     </p>
 
-    <a color: black; href="light.html" class="back-link" aria-label="Go back to home">
-      <svg width="24" height="24" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="16" height="16" fill="white"/>
-        <path fill="black" d="M4.5 8l6-5v10l-6-5z"/>
-      </svg>
-      Back
-    </a>
-    <a color: black; href="about.html">Switch to dark mode</a>
+    <a href="index.html">Back</a><br>
+    <a href="about.html">Switch to dark mode</a>
   </div>
 </body>
 </html>
