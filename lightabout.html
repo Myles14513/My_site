@@ -51,10 +51,55 @@ span:hover {
   padding: 5px;
 } 
 
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -250px;     
+  width: 250px;
+  height: 100%;
+  background-color: #f0f0f0; 
+  color: #222;               
+  transition: left 0.3s ease;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1); 
+}
+
+.sidebar.active {
+  left: 0;          
+}
+
+#menu {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  padding: 10px 15px;
+  background-color: #ddd;   
+  color: #222;              
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15); 
+}
+
+#menu span {
+  display: block;
+  width: 25px;        
+  height: 3px;
+  background-color: #222;  
+  margin: 4px 0;       
+  border-radius: 2px;
+}
     
   </style>
 </head>
 <body>
+  
+  <button id="menu" aria-label="Menu">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
   <div class="container">
     <p>
   <span>Hey,</span> <span>I’m</span> <span>Myles!</span> <span>I’m</span> <span>13,</span> <span>still</span> <span>in</span> <span>school</span> <span>and</span> <span>from</span> <span>the</span> <span>United</span> <span>Kingdom.</span> <span>I</span> <span>am</span> <span>really</span> <span>into</span> <span>coding.</span> <span>I’ve</span> <span>taught</span> <span>myself</span> <span>most</span> <span>of</span> <span>what</span> <span>I</span> <span>know</span> <span>so</span> <span>far</span> <span>and</span> <span>I’m</span> <span>still</span> <span>learning</span> <span>new</span> <span>things</span> <span>every</span> <span>day</span> <span>—</span> <span>like</span> <span>Python,</span> <span>HTML,</span> <span>JavaScript,</span> <span>and</span> <span>Lua.</span>
@@ -63,8 +108,26 @@ span:hover {
   <span>I</span> <span>made</span> <span>this</span> <span>website</span> <span>to</span> <span>try</span> <span>out</span> <span>my</span> <span>skills</span> <span>and</span> <span>see</span> <span>what</span> <span>I</span> <span>can</span> <span>build,</span> <span>it</span> <span>can</span> <span>help</span> <span>others</span> <span>find</span> <span>me.</span> <span>I’m</span> <span>pretty</span> <span>proud</span> <span>of</span> <span>it</span> <span>and</span> <span>can’t</span> <span>wait</span> <span>to</span> <span>keep</span> <span>getting</span> <span>better!</span> <span>I</span> <span>have</span> <span>mostly</span> <span>done</span> <span>this</span> <span>site</span> <span>from</span> <span>my</span> <span>phone</span> <span>but</span> <span>some</span> <span>on</span> <span>a</span> <span>school</span> <span>laptop.</span> <span>I</span> <span>hope</span> <span>I</span> <span>will</span> <span>be</span> <span>able</span> <span>to</span> <span>buy</span> <span>myself</span> <span>a</span> <span>laptop</span> <span>soon!</span>
 </p>
 
-    <a href="light.html">Back</a><br>
-    <a href="about.html">Switch to dark mode</a>
-  </div>
+    
+  
+   <div class="sidebar">
+  <br><br><h1>Navigation<h1>
+      <a href="main.html">🏠Home</a><br>
+    <a href="qualifications.html">📜Quals</a>
+    <a href="light.html"> ℹ️ Info</a>
+    <a href="about.html">🌚 Switch to Dark Mode</a>
+</div>
+
+<!-- other content -->
+
+<script>
+  const menuButton = document.getElementById('menu');
+  const sidebar = document.querySelector('.sidebar');
+
+  menuButton.addEventListener('click', function() {
+    sidebar.classList.toggle('active');
+  });
+</script>
+  
 </body>
 </html>
