@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mini VS Code Editor</title>
+<style>
+  /* Reset & basics */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0; height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1e1e1e;
+    color: #ddd;
+    display: flex;
+  }
+  /* Sidebar */
+  #sidebar {
+    width: 200px;
+    background: #252526;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    color: #ccc;
+    user-select: none;
+  }
+  #sidebar h2 {
+    margin: 0 0 15px;
+    font-weight: normal;
+    font-size: 18px;
+  }
+  #sidebar button {
+    margin: 5px 0;
+    padding: 8px;
+    background: #3a3d41;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 14px;
+  }
+  #sidebar button:hover {
+    background: #505357;
+  }
+  /* Main area */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Tabs */
+  #tabs {
+    background: #252526;
+    display: flex;
+  }
+  #tabs button {
+    flex: 1;
+    background: #252526;
+    border: none;
+    color: #ccc;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    border-bottom: 2px solid transparent;
+  }
+  #tabs button.active {
+    border-bottom: 2px solid #0e639c;
+    background: #1e1e1e;
+    color: #fff;
+  }
+  /* Editors */
+  textarea {
+    flex: 1;
+    background: #1e1e1e;
+    border: none;
+    color: #ddd;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 10px;
+    resize: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+  }
+  /* Container for editor & buttons */
+  #editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  #edit-buttons {
+    background: #252526;
+    padding: 5px 10px;
+    display: flex;
+    gap: 10px;
+  }
+  #edit-buttons button {
+    background: #3a3d41;
+    border: none;
+    color: #ccc;
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #edit-buttons button:hover {
+    background: #505357;
+  }
+  /* Preview */
+  #preview {
+    height: 200px;
+    border: none;
+    background: white;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <h2>Editor Controls</h2>
+  <button id="btn-save">Save</button>
+  <button id="btn-load">Load</button>
+  <button id="btn-run">Run</button>
+  <hr style="border-color:#444;">
+  <small style="color:#666;">On PS5, use buttons to insert tab or newline</small>
+</div>
+
+<div id="main">
+  <div id="tabs">
+    <button id="tab-html" class="active">HTML</button>
+    <button id="tab-css">CSS</button>
+    <button id="tab-js">JS</button>
+  </div>
+  <div id="editor-container">
+    <textarea id="editor-html" placeholder="Write HTML here..."></textarea>
+    <textarea id="editor-css" placeholder="Write CSS here..." style="display:none;"></textarea>
+    <textarea id="editor-js" placeholder="Write JavaScript here..." style="display:none;"></textarea>
+    <div id="edit-buttons">
+      <button id="btn-tab">Insert Tab</button>
+      <button id="btn-newline">Insert Newline</button>
+    </div>
+  </div>
+  <iframe id="preview"></iframe>
+</div>
+
+<script>
+  // Elements
+  const tabs = {
+    html: document.getElementById('tab-html'),
+    css: document.getElementById('tab-css'),
+    js: document.getElementById('tab-js')
+  };
+  const editors = {
+    html: document.getElementById('editor-html'),
+    css: document.getElementById('editor-css'),
+    js: document.getElementById('editor-js')
+  };
+  let currentTab = 'html';
+
+  // Switch tabs
+  function switchTab(tab) {
+    currentTab = tab;
+    for (const key in tabs) {
+      tabs[key].classList.toggle('active', key === tab);
+      editors[key].style.display = key === tab ? 'block' : 'none';
+    }
+  }
+  for (const key in tabs) {
+    tabs[key].addEventListener('click', () => switchTab(key));
+  }
+
+  // Insert text at cursor helper
+  function insertAtCursor(textarea, text) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const val = textarea.value;
+    textarea.value = val.substring(0, start) + text + val.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + text.length;
+    textarea.focus();
+  }
+
+  // Buttons to insert tab and newline
+  document.getElementById('btn-tab').addEventListener('click', () => {
+    insertAtCursor(editors[currentTab], '  ');
+  });
+  document.getElementById('btn-newline').addEventListener('click', () => {
+    insertAtCursor(editors[currentTab], '\n');
+  });
+
+  // Save/load with localStorage
+  document.getElementById('btn-save').addEventListener('click', () => {
+    localStorage.setItem('code-html', editors.html.value);
+    localStorage.setItem('code-css', editors.css.value);
+    localStorage.setItem('code-js', editors.js.value);
+    alert('Code saved locally!');
+  });
+
+  document.getElementById('btn-load').addEventListener('click', () => {
+    if(localStorage.getItem('code-html')) editors.html.value = localStorage.getItem('code-html');
+    if(localStorage.getItem('code-css')) editors.css.value = localStorage.getItem('code-css');
+    if(localStorage.getItem('code-js')) editors.js.value = localStorage.getItem('code-js');
+    alert('Code loaded!');
+  });
+
+  // Run the code
+  document.getElementById('btn-run').addEventListener('click', () => {
+    const html = editors.html.value;
+    const css = `<style>${editors.css.value}</style>`;
+    const js = `<script>${editors.js.value}<\/script>`;
+    const srcdoc = `${html}${css}${js}`;
+    document.getElementById('preview').srcdoc = srcdoc;
+  });
+
+  // Initialize with sample code (optional)
+  editors.html.value = "<!-- Write your HTML here -->\n<div>Hello world!</div>";
+  editors.css.value = "body { font-family: Arial; color: darkblue; }";
+  editors.js.value = "console.log('Hello from JS!');";
+
+  // Show HTML tab initially
+  switchTab('html');
+</script>
+
+</body>
+</html>
