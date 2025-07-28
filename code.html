@@ -1,1039 +1,1023 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>VS Code Web Clone</title>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
-<style>
-/* ===== VS Code Inspired Dark Theme CSS ===== */
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VS Code Web Clone Extended</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
+  <style>
+    /* VS Code Dark Theme Extended */
 
-/* Reset and basics */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+    :root {
+      --vscode-background: #1e1e1e;
+      --vscode-sidebar-bg: #252526;
+      --vscode-sidebar-border: #333333;
+      --vscode-editor-bg: #1e1e1e;
+      --vscode-editor-foreground: #d4d4d4;
+      --vscode-tab-bg: #252526;
+      --vscode-tab-active-bg: #1e1e1e;
+      --vscode-tab-border: #3c3c3c;
+      --vscode-tab-active-border: #007acc;
+      --vscode-statusbar-bg: #007acc;
+      --vscode-statusbar-foreground: #ffffff;
+      --vscode-button-bg: #0e639c;
+      --vscode-button-hover-bg: #1177cc;
+      --vscode-scrollbar-bg: #333333;
+      --vscode-scrollbar-thumb: #555555;
+      --vscode-scrollbar-thumb-hover: #888888;
+      --vscode-hover-bg: #373737;
+      --vscode-text-highlight: #264f78;
+      --vscode-border-color: #3c3c3c;
+      --vscode-extension-list-bg: #252526;
+      --vscode-extension-item-hover: #3a3d41;
+    }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: 'Fira Code', Consolas, 'Courier New', monospace;
-  background-color: #1e1e1e;
-  color: #d4d4d4;
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  user-select: none;
-}
+    * {
+      box-sizing: border-box;
+    }
 
-/* Root CSS Variables */
-:root {
-  --vscode-background: #1e1e1e;
-  --vscode-sidebar-bg: #252526;
-  --vscode-sidebar-border: #333333;
-  --vscode-editor-bg: #1e1e1e;
-  --vscode-editor-foreground: #d4d4d4;
-  --vscode-tab-bg: #252526;
-  --vscode-tab-active-bg: #1e1e1e;
-  --vscode-tab-border: #3c3c3c;
-  --vscode-tab-active-border: #007acc;
-  --vscode-statusbar-bg: #007acc;
-  --vscode-statusbar-foreground: #ffffff;
-  --vscode-button-bg: #0e639c;
-  --vscode-button-hover-bg: #1177cc;
-  --vscode-scrollbar-bg: #333333;
-  --vscode-scrollbar-thumb: #555555;
-  --vscode-scrollbar-thumb-hover: #888888;
-  --vscode-hover-bg: #373737;
-  --vscode-text-highlight: #264f78;
-  --vscode-border-color: #3c3c3c;
-}
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: 'Fira Code', monospace, Consolas, 'Courier New', monospace;
+      background-color: var(--vscode-background);
+      color: var(--vscode-editor-foreground);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+    }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-track {
-  background: var(--vscode-scrollbar-bg);
-}
-::-webkit-scrollbar-thumb {
-  background-color: var(--vscode-scrollbar-thumb);
-  border-radius: 5px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--vscode-scrollbar-thumb-hover);
-}
+    #app {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
 
-/* App container layout */
-#app {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  background: var(--vscode-background);
-  color: var(--vscode-editor-foreground);
-  overflow: hidden;
-}
+    /* Sidebar */
+    #sidebar {
+      width: 48px;
+      background-color: var(--vscode-sidebar-bg);
+      border-right: 1px solid var(--vscode-sidebar-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0;
+      user-select: none;
+    }
 
-/* Sidebar */
-#sidebar {
-  width: 48px;
-  background-color: var(--vscode-sidebar-bg);
-  border-right: 1px solid var(--vscode-sidebar-border);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px 0;
-  user-select: none;
-}
+    .sidebar-button {
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: none;
+      color: var(--vscode-editor-foreground);
+      font-size: 20px;
+      cursor: pointer;
+      margin: 6px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background-color 0.15s ease-in-out;
+    }
 
-.sidebar-button {
-  width: 36px;
-  height: 36px;
-  background: none;
-  border: none;
-  color: var(--vscode-editor-foreground);
-  font-size: 20px;
-  cursor: pointer;
-  margin: 6px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.15s ease-in-out;
-}
+    .sidebar-button:hover,
+    .sidebar-button.active {
+      background-color: var(--vscode-hover-bg);
+      color: white;
+    }
 
-.sidebar-button:hover,
-.sidebar-button.active {
-  background-color: var(--vscode-hover-bg);
-  color: white;
-}
+    /* Panels container */
+    #panels {
+      width: 240px;
+      background-color: var(--vscode-sidebar-bg);
+      border-right: 1px solid var(--vscode-sidebar-border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      user-select: text;
+    }
 
-/* Panels container */
-#panels {
-  width: 240px;
-  background-color: var(--vscode-sidebar-bg);
-  border-right: 1px solid var(--vscode-sidebar-border);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  user-select: text;
-}
+    /* Panel Headers */
+    .panel header {
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 14px;
+      border-bottom: 1px solid var(--vscode-sidebar-border);
+      color: #cccccc;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-/* Panel headers */
-.panel header {
-  padding: 12px 16px;
-  font-weight: 600;
-  font-size: 14px;
-  border-bottom: 1px solid var(--vscode-sidebar-border);
-  color: #cccccc;
-  user-select: none;
-}
+    /* File List */
+    #file-list, #search-results, #extension-list {
+      list-style: none;
+      padding: 8px 0;
+      margin: 0;
+      flex-grow: 1;
+      overflow-y: auto;
+      max-height: calc(100vh - 60px);
+    }
 
-/* Panel content lists */
-.file-list,
-#search-results,
-#extension-list {
-  list-style: none;
-  padding: 8px 0;
-  margin: 0;
-  flex-grow: 1;
-  overflow-y: auto;
-}
+    #file-list li, #search-results li, #extension-list li {
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--vscode-editor-foreground);
+      transition: background-color 0.15s ease-in-out;
+    }
 
-/* File list items */
-.file-list li,
-#search-results li,
-#extension-list li {
-  padding: 6px 12px;
-  font-size: 13px;
-  cursor: pointer;
-  border-radius: 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--vscode-editor-foreground);
-  transition: background-color 0.15s ease-in-out;
-  user-select: text;
-}
+    #file-list li:hover:not(.active),
+    #search-results li:hover,
+    #extension-list li:hover {
+      background-color: var(--vscode-hover-bg);
+    }
 
-.file-list li:hover:not(.active),
-#search-results li:hover,
-#extension-list li:hover {
-  background-color: var(--vscode-hover-bg);
-}
+    #file-list li.active {
+      background-color: var(--vscode-text-highlight);
+      color: white;
+    }
 
-.file-list li.active {
-  background-color: var(--vscode-text-highlight);
-  color: white;
-}
+    /* Delete file button */
+    .delete-file-btn {
+      background: transparent;
+      border: none;
+      color: #888888;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0 4px;
+      border-radius: 2px;
+      transition: color 0.15s ease-in-out;
+    }
 
-/* Delete file button */
-.file-list li button.delete-file {
-  background: transparent;
-  border: none;
-  color: #888888;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 0 4px;
-  border-radius: 2px;
-  transition: color 0.15s ease-in-out;
-}
+    .delete-file-btn:hover {
+      color: #e81123;
+    }
 
-.file-list li button.delete-file:hover {
-  color: #e81123;
-}
+    /* New file input container */
+    #new-file-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
 
-/* New file container */
-#new-file-controls {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
+    #new-file-name {
+      flex-grow: 1;
+      font-size: 13px;
+      padding: 6px 8px;
+      border: 1px solid var(--vscode-sidebar-border);
+      border-radius: 4px;
+      background-color: var(--vscode-background);
+      color: var(--vscode-editor-foreground);
+      outline: none;
+      transition: border-color 0.2s ease-in-out;
+    }
 
-#new-file-controls input[type="text"] {
-  flex-grow: 1;
-  font-size: 13px;
-  padding: 6px 8px;
-  border: 1px solid var(--vscode-sidebar-border);
-  border-radius: 4px;
-  background-color: #1e1e1e;
-  color: var(--vscode-editor-foreground);
-  outline: none;
-  transition: border-color 0.2s ease-in-out;
-}
+    #new-file-name:focus {
+      border-color: var(--vscode-button-bg);
+    }
 
-#new-file-controls input[type="text"]:focus {
-  border-color: var(--vscode-button-bg);
-}
+    #btn-new-file {
+      background-color: var(--vscode-button-bg);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.15s ease-in-out;
+    }
 
-#new-file-controls button {
-  background-color: var(--vscode-button-bg);
-  border: none;
-  color: white;
-  padding: 6px 12px;
-  font-size: 13px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.15s ease-in-out;
-}
+    #btn-new-file:hover {
+      background-color: var(--vscode-button-hover-bg);
+    }
 
-#new-file-controls button:hover {
-  background-color: var(--vscode-button-hover-bg);
-}
+    /* Main Editor Area */
+    #main-area {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--vscode-editor-bg);
+      overflow: hidden;
+      user-select: text;
+    }
 
-/* Main editor area */
-#main-area {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--vscode-editor-bg);
-  overflow: hidden;
-  user-select: text;
-}
+    /* Tabs */
+    #tab-bar {
+      height: 36px;
+      background-color: var(--vscode-tab-bg);
+      border-bottom: 1px solid var(--vscode-tab-border);
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+      padding-left: 8px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
 
-/* Tab bar */
-#tab-bar {
-  height: 36px;
-  background-color: var(--vscode-tab-bg);
-  border-bottom: 1px solid var(--vscode-tab-border);
-  display: flex;
-  align-items: center;
-  overflow-x: auto;
-  padding-left: 8px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  user-select: none;
-}
-#tab-bar::-webkit-scrollbar {
-  display: none;
-}
+    #tab-bar::-webkit-scrollbar {
+      display: none;
+    }
 
-.tab {
-  display: flex;
-  align-items: center;
-  padding: 6px 12px;
-  margin-right: 4px;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  font-size: 13px;
-  background-color: var(--vscode-tab-bg);
-  color: var(--vscode-editor-foreground);
-  cursor: pointer;
-  user-select: none;
-  position: relative;
-  transition: background-color 0.2s ease-in-out;
-  white-space: nowrap;
-}
+    .tab {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      margin-right: 4px;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      font-size: 13px;
+      background-color: var(--vscode-tab-bg);
+      color: var(--vscode-editor-foreground);
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      transition: background-color 0.2s ease-in-out;
+      white-space: nowrap;
+    }
 
-.tab.active {
-  background-color: var(--vscode-tab-active-bg);
-  color: white;
-  border-bottom: 2px solid var(--vscode-tab-active-border);
-}
+    .tab.active {
+      background-color: var(--vscode-tab-active-bg);
+      color: white;
+      border-bottom: 2px solid var(--vscode-tab-active-border);
+    }
 
-.tab:hover:not(.active) {
-  background-color: var(--vscode-hover-bg);
-  color: white;
-}
+    .tab:hover:not(.active) {
+      background-color: var(--vscode-hover-bg);
+      color: white;
+    }
 
-.tab .close-btn {
-  margin-left: 8px;
-  color: #888888;
-  font-weight: 700;
-  cursor: pointer;
-  font-size: 14px;
-  user-select: none;
-}
+    .close-btn {
+      margin-left: 8px;
+      color: #888888;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      user-select: none;
+    }
 
-.tab .close-btn:hover {
-  color: #e81123;
-}
+    .close-btn:hover {
+      color: #e81123;
+    }
 
-/* Editor container */
-#editor-container {
-  flex-grow: 1;
-  position: relative;
-  background-color: var(--vscode-editor-bg);
-  overflow: hidden;
-}
+    /* Editor Container */
+    #editor-container {
+      flex-grow: 1;
+      position: relative;
+      background-color: var(--vscode-editor-bg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
 
-#code-editor {
-  width: 100%;
-  height: 100%;
-  resize: none;
-  background-color: var(--vscode-editor-bg);
-  border: none;
-  outline: none;
-  color: var(--vscode-editor-foreground);
-  font-family: 'Fira Code', Consolas, 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.4;
-  padding: 12px;
-  box-sizing: border-box;
-  white-space: pre;
-  caret-color: #ffffff;
-}
+    #code-editor {
+      flex-grow: 1;
+      width: 100%;
+      resize: none;
+      background-color: var(--vscode-editor-bg);
+      border: none;
+      outline: none;
+      color: var(--vscode-editor-foreground);
+      font-family: 'Fira Code', monospace, Consolas, 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.4;
+      padding: 12px;
+      box-sizing: border-box;
+      white-space: pre;
+      overflow: auto;
+      user-select: text;
+    }
 
-/* Status bar */
-#status-bar {
-  height: 22px;
-  background-color: var(--vscode-statusbar-bg);
-  color: var(--vscode-statusbar-foreground);
-  font-size: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 12px;
-  user-select: none;
-  border-top: 1px solid rgba(255,255,255,0.1);
-}
+    /* Status Bar */
+    #status-bar {
+      height: 22px;
+      background-color: var(--vscode-statusbar-bg);
+      color: var(--vscode-statusbar-foreground);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 12px;
+      user-select: none;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-/* PS5 Buttons overlay */
-#ps5-buttons {
-  position: absolute;
-  bottom: 40px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  z-index: 10;
-}
+    /* PS5 buttons overlay */
+    #ps5-buttons {
+      position: absolute;
+      bottom: 40px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+    }
 
-#ps5-buttons button {
-  background-color: var(--vscode-button-bg);
-  border: none;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.15s ease-in-out;
-  user-select: none;
-}
+    #ps5-buttons button {
+      background-color: var(--vscode-button-bg);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.15s ease-in-out;
+      user-select: none;
+    }
 
-#ps5-buttons button:hover {
-  background-color: var(--vscode-button-hover-bg);
-}
+    #ps5-buttons button:hover {
+      background-color: var(--vscode-button-hover-bg);
+    }
 
-/* Modal overlay for code coverup */
-#modal-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(30,30,30,0.9);
-  color: white;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  flex-direction: column;
-  font-size: 18px;
-  text-align: center;
-  padding: 20px;
-  user-select: none;
-}
+    /* Modal Overlay for Coming Soon and Settings */
+    #modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(30,30,30,0.9);
+      color: white;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      flex-direction: column;
+      font-size: 18px;
+      text-align: center;
+      padding: 20px;
+      user-select: none;
+    }
 
-#modal-overlay button {
-  margin-top: 20px;
-  background-color: var(--vscode-button-bg);
-  border: none;
-  color: white;
-  padding: 8px 20px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.15s ease-in-out;
-}
+    #modal-overlay button {
+      margin-top: 20px;
+      background-color: var(--vscode-button-bg);
+      border: none;
+      color: white;
+      padding: 8px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s ease-in-out;
+    }
 
-#modal-overlay button:hover {
-  background-color: var(--vscode-button-hover-bg);
-}
+    #modal-overlay button:hover {
+      background-color: var(--vscode-button-hover-bg);
+    }
 
-/* Panels for search, run, extensions, settings */
-.panel {
-  background-color: var(--vscode-sidebar-bg);
-  border-top: 1px solid var(--vscode-tab-border);
-  color: var(--vscode-editor-foreground);
-  font-size: 14px;
-  padding: 12px;
-  display: none;
-  overflow-y: auto;
-  max-height: 300px;
-}
+    /* Extensions list */
+    #extension-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--vscode-sidebar-border);
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
 
-.panel.open {
-  display: block;
-}
+    #extension-list li:hover {
+      background-color: var(--vscode-extension-item-hover);
+    }
 
-/* Search input */
-#search-input {
-  width: calc(100% - 36px);
-  padding: 6px 8px;
-  margin-top: 6px;
-  margin-bottom: 8px;
-  border-radius: 4px;
-  border: 1px solid var(--vscode-sidebar-border);
-  background-color: #1e1e1e;
-  color: var(--vscode-editor-foreground);
-  font-family: 'Fira Code', monospace;
-  font-size: 13px;
-  outline: none;
-  user-select: text;
-}
+    .extension-info {
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
 
-#search-input::placeholder {
-  color: #888;
-}
+    .extension-name {
+      font-weight: 600;
+    }
 
-/* Clear search button */
-#btn-clear-search {
-  background: none;
-  border: none;
-  color: var(--vscode-editor-foreground);
-  font-size: 18px;
-  cursor: pointer;
-  margin-left: 4px;
-  padding: 0;
-  user-select: none;
-}
+    .extension-desc {
+      font-weight: 400;
+      color: #999;
+    }
 
-/* Responsive */
-@media (max-width: 600px) {
-  #panels {
-    width: 180px;
-  }
-}
+    /* Search panel */
+    #search-input {
+      width: 70%;
+      padding: 6px 8px;
+      border: 1px solid var(--vscode-sidebar-border);
+      border-radius: 4px;
+      background-color: var(--vscode-background);
+      color: var(--vscode-editor-foreground);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s ease-in-out;
+    }
 
-/* Scrollbar styling for explorer and panels */
-#panels::-webkit-scrollbar,
-.file-list::-webkit-scrollbar,
-#search-results::-webkit-scrollbar,
-#extension-list::-webkit-scrollbar {
-  width: 8px;
-}
+    #search-input:focus {
+      border-color: var(--vscode-button-bg);
+    }
 
-#panels::-webkit-scrollbar-track,
-.file-list::-webkit-scrollbar-track,
-#search-results::-webkit-scrollbar-track,
-#extension-list::-webkit-scrollbar-track {
-  background: var(--vscode-sidebar-bg);
-}
+    #btn-clear-search {
+      background: none;
+      border: none;
+      color: var(--vscode-editor-foreground);
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 8px;
+      user-select: none;
+    }
 
-#panels::-webkit-scrollbar-thumb,
-.file-list::-webkit-scrollbar-thumb,
-#search-results::-webkit-scrollbar-thumb,
-#extension-list::-webkit-scrollbar-thumb {
-  background-color: var(--vscode-scrollbar-thumb);
-  border-radius: 4px;
-}
+    #btn-clear-search:hover {
+      color: #e81123;
+    }
 
-#panels::-webkit-scrollbar-thumb:hover,
-.file-list::-webkit-scrollbar-thumb:hover,
-#search-results::-webkit-scrollbar-thumb:hover,
-#extension-list::-webkit-scrollbar-thumb:hover {
-  background-color: var(--vscode-scrollbar-thumb-hover);
-}
+    /* Run Panel */
+    #run-iframe {
+      width: 100%;
+      height: 150px;
+      border: none;
+      background-color: white;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
 
-/* Focus outlines */
-.sidebar-button:focus,
-.file-list li:focus,
-.tab:focus,
-#new-file-controls input:focus,
-#new-file-controls button:focus,
-#ps5-buttons button:focus,
-#modal-overlay button:focus,
-#search-input:focus {
-  outline: 2px solid var(--vscode-button-bg);
-  outline-offset: 2px;
-}
-
-</style>
+  </style>
 </head>
 <body>
-<div id="app" class="theme-dark" role="application" aria-label="VS Code web clone">
+  <div id="app" class="theme-dark" role="application" aria-label="VS Code Web Clone">
+    <aside id="sidebar" role="navigation" aria-label="Main Sidebar">
+      <button id="btn-explorer" class="sidebar-button active" aria-pressed="true" aria-label="Explorer">📁</button>
+      <button id="btn-search" class="sidebar-button" aria-pressed="false" aria-label="Search">🔍</button>
+      <button id="btn-run" class="sidebar-button" aria-pressed="false" aria-label="Run and Debug">▶️</button>
+      <button id="btn-extensions" class="sidebar-button" aria-pressed="false" aria-label="Extensions">🧩</button>
+      <button id="btn-settings" class="sidebar-button" aria-pressed="false" aria-label="Settings">⚙️</button>
+    </aside>
 
-  <!-- Sidebar -->
-  <aside id="sidebar" aria-label="Sidebar" role="navigation">
-    <nav id="sidebar-buttons" role="toolbar" aria-orientation="vertical">
-      <button id="btn-explorer" aria-pressed="true" aria-label="Explorer" tabindex="0" class="sidebar-button active" title="Explorer">📁</button>
-      <button id="btn-search" aria-pressed="false" aria-label="Search" tabindex="0" class="sidebar-button" title="Search">🔍</button>
-      <button id="btn-run" aria-pressed="false" aria-label="Run and Debug" tabindex="0" class="sidebar-button" title="Run and Debug">▶️</button>
-      <button id="btn-extensions" aria-pressed="false" aria-label="Extensions" tabindex="0" class="sidebar-button" title="Extensions">🧩</button>
-      <button id="btn-settings" aria-pressed="false" aria-label="Settings" tabindex="0" class="sidebar-button" title="Settings">⚙️</button>
-    </nav>
-  </aside>
+    <section id="panels" aria-live="polite" role="main">
+      <!-- Explorer Panel -->
+      <section id="panel-explorer" class="panel" role="region" aria-label="Explorer Panel">
+        <header>
+          <h2>EXPLORER</h2>
+          <div id="new-file-controls">
+            <input type="text" id="new-file-name" placeholder="New file name..." aria-label="New file name" />
+            <button id="btn-new-file" aria-label="Add new file">Add</button>
+          </div>
+        </header>
+        <ul id="file-list" role="list" aria-label="Files"></ul>
+      </section>
 
-  <!-- Panels -->
-  <section id="panels" role="region" aria-label="Panels">
+      <!-- Search Panel -->
+      <section id="panel-search" class="panel hidden" role="region" aria-label="Search Panel">
+        <header>
+          <h2>SEARCH</h2>
+          <input type="search" id="search-input" placeholder="Search in files..." aria-label="Search in files" />
+          <button id="btn-clear-search" title="Clear search" aria-label="Clear search">✖️</button>
+        </header>
+        <ul id="search-results" role="list" aria-label="Search Results"></ul>
+      </section>
 
-    <!-- Explorer Panel -->
-    <section id="panel-explorer" class="panel open" role="region" aria-label="Explorer Panel">
-      <header>
-        EXPLORER
-      </header>
-      <ul id="file-list" role="list" aria-label="Files" class="file-list"></ul>
-      <div id="new-file-controls">
-        <input type="text" id="new-file-name" placeholder="New file name..." aria-label="New file name" autocomplete="off" />
-        <button id="btn-add-file" aria-label="Add new file">+</button>
+      <!-- Run Panel -->
+      <section id="panel-run" class="panel hidden" role="region" aria-label="Run and Debug Panel">
+        <header>
+          <h2>RUN AND DEBUG</h2>
+          <button id="btn-run-code" aria-label="Run Code">Run Code</button>
+        </header>
+        <iframe id="run-iframe" sandbox="allow-scripts allow-same-origin" title="Run code output"></iframe>
+      </section>
+
+      <!-- Extensions Panel -->
+      <section id="panel-extensions" class="panel hidden" role="region" aria-label="Extensions Panel">
+        <header>
+          <h2>EXTENSIONS</h2>
+        </header>
+        <ul id="extension-list" role="list" aria-label="Extension List"></ul>
+      </section>
+
+      <!-- Settings Panel -->
+      <section id="panel-settings" class="panel hidden" role="region" aria-label="Settings Panel">
+        <header>
+          <h2>SETTINGS</h2>
+        </header>
+        <div id="settings-content" tabindex="0" style="padding: 10px; font-size: 14px; color: var(--vscode-editor-foreground); user-select: text;">
+          <label>
+            <input type="checkbox" id="setting-word-wrap" />
+            Enable Word Wrap
+          </label>
+          <br />
+          <label>
+            <input type="checkbox" id="setting-autocomplete" checked />
+            Enable Autocomplete (Basic)
+          </label>
+          <br />
+          <label>
+            Theme:
+            <select id="setting-theme">
+              <option value="dark" selected>Dark</option>
+              <option value="light">Light (not implemented)</option>
+            </select>
+          </label>
+          <br />
+          <small style="color:#999;">Settings will be saved locally</small>
+        </div>
+      </section>
+    </section>
+
+    <main id="main-area" role="main" aria-live="polite">
+      <nav id="tab-bar" role="tablist" aria-label="Open Files Tabs"></nav>
+      <textarea id="code-editor" spellcheck="false" aria-label="Code editor" role="textbox" aria-multiline="true"></textarea>
+      <div id="ps5-buttons" aria-label="PS5 Controller Buttons">
+        <button id="btn-insert-tab" aria-label="Insert Tab Character">Insert Tab</button>
+        <button id="btn-insert-newline" aria-label="Insert New Line">Insert Newline</button>
       </div>
-    </section>
-
-    <!-- Search Panel -->
-    <section id="panel-search" class="panel" role="region" aria-label="Search Panel">
-      <header>
-        SEARCH
-      </header>
-      <input type="search" id="search-input" placeholder="Search files..." aria-label="Search files" />
-      <button id="btn-clear-search" aria-label="Clear search">✖️</button>
-      <ul id="search-results" role="list" aria-label="Search Results"></ul>
-    </section>
-
-    <!-- Run Panel -->
-    <section id="panel-run" class="panel" role="region" aria-label="Run and Debug Panel">
-      <header>
-        RUN AND DEBUG
-      </header>
-      <p>No debugging available in this web version.</p>
-    </section>
-
-    <!-- Extensions Panel -->
-    <section id="panel-extensions" class="panel" role="region" aria-label="Extensions Panel">
-      <header>
-        EXTENSIONS
-      </header>
-      <ul id="extension-list" role="list" aria-label="Extensions"></ul>
-      <p style="font-size:12px; margin-top:8px;">No extensions available in this demo.</p>
-    </section>
-
-    <!-- Settings Panel -->
-    <section id="panel-settings" class="panel" role="region" aria-label="Settings Panel">
-      <header>
-        SETTINGS
-      </header>
-      <p style="font-size:13px;">This is a minimal demo. Settings are not implemented yet.</p>
-    </section>
-
-  </section>
-
-  <!-- Main Area -->
-  <main id="main-area" role="main" tabindex="-1" aria-label="Editor and tabs">
-
-    <!-- Tab Bar -->
-    <div id="tab-bar" role="tablist" aria-label="Open files tabs"></div>
-
-    <!-- Editor Container -->
-    <div id="editor-container">
-      <textarea id="code-editor" spellcheck="false" aria-label="Code editor" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-    </div>
-
-    <!-- Status Bar -->
-    <footer id="status-bar" role="contentinfo" aria-live="polite">
-      <div id="status-left">Ready</div>
-      <div id="status-right">Ln 1, Col 1</div>
-    </footer>
-
-  </main>
-
-  <!-- PS5 Buttons for tab/newline insert -->
-  <div id="ps5-buttons" aria-label="PS5 controller helper buttons" role="group">
-    <button id="btn-insert-tab" aria-label="Insert tab character">Insert Tab</button>
-    <button id="btn-insert-newline" aria-label="Insert newline character">Insert Newline</button>
+      <div id="status-bar" role="contentinfo">
+        <div id="status-file">No file opened</div>
+        <div id="status-caret">Ln 1, Col 1</div>
+      </div>
+    </main>
   </div>
 
-  <!-- Modal Overlay -->
-  <div id="modal-overlay" role="alertdialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-desc">
-    <div id="modal-title" style="font-weight:700; font-size:24px; margin-bottom:12px;">Alert</div>
-    <div id="modal-desc"></div>
-    <button id="modal-close">Close</button>
+  <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-desc">
+    <h2 id="modal-title">Feature Coming Soon</h2>
+    <p id="modal-desc">This feature is planned but not implemented yet.</p>
+    <button id="modal-close-btn" aria-label="Close dialog">Close</button>
   </div>
 
-</div>
-
-<script>
-/* VS Code Clone JavaScript Logic */
-
-(() => {
-  // Elements
-  const fileListEl = document.getElementById('file-list');
-  const newFileNameInput = document.getElementById('new-file-name');
-  const btnAddFile = document.getElementById('btn-add-file');
-  const tabBar = document.getElementById('tab-bar');
-  const codeEditor = document.getElementById('code-editor');
-  const statusLeft = document.getElementById('status-left');
-  const statusRight = document.getElementById('status-right');
-  const ps5InsertTabBtn = document.getElementById('btn-insert-tab');
-  const ps5InsertNewlineBtn = document.getElementById('btn-insert-newline');
-  const modalOverlay = document.getElementById('modal-overlay');
-  const modalDesc = document.getElementById('modal-desc');
-  const modalClose = document.getElementById('modal-close');
-
-  // Sidebar buttons & panels
-  const sidebarButtons = document.querySelectorAll('#sidebar-buttons button');
-  const panels = document.querySelectorAll('.panel');
-
-  // Search panel elements
-  const btnSearch = document.getElementById('btn-search');
-  const btnExplorer = document.getElementById('btn-explorer');
-  const btnRun = document.getElementById('btn-run');
-  const btnExtensions = document.getElementById('btn-extensions');
-  const btnSettings = document.getElementById('btn-settings');
-
-  const panelExplorer = document.getElementById('panel-explorer');
-  const panelSearch = document.getElementById('panel-search');
-  const panelRun = document.getElementById('panel-run');
-  const panelExtensions = document.getElementById('panel-extensions');
-  const panelSettings = document.getElementById('panel-settings');
-
-  const searchInput = document.getElementById('search-input');
-  const searchResults = document.getElementById('search-results');
-  const btnClearSearch = document.getElementById('btn-clear-search');
-
-  // Data
-  let files = {};
-  let openTabs = [];
-  let activeTab = null;
-
-  // Initialize with a default file
-  function init() {
-    // Load from localStorage if present
-    const savedFiles = localStorage.getItem('vscode-clone-files');
-    if (savedFiles) {
-      files = JSON.parse(savedFiles);
-    } else {
-      files = {
-        'README.md': '# Welcome to VS Code Web Clone\n\nStart editing files or create new ones!'
-      };
-    }
-
-    const savedTabs = localStorage.getItem('vscode-clone-tabs');
-    if (savedTabs) {
-      openTabs = JSON.parse(savedTabs);
-    } else {
-      openTabs = ['README.md'];
-    }
-
-    const savedActive = localStorage.getItem('vscode-clone-active-tab');
-    if (savedActive && openTabs.includes(savedActive)) {
-      activeTab = savedActive;
-    } else {
-      activeTab = openTabs[0];
-    }
-
-    renderFileList();
-    renderTabs();
-    loadActiveTabContent();
-  }
-
-  // Save current state to localStorage
-  function saveState() {
-    localStorage.setItem('vscode-clone-files', JSON.stringify(files));
-    localStorage.setItem('vscode-clone-tabs', JSON.stringify(openTabs));
-    localStorage.setItem('vscode-clone-active-tab', activeTab);
-  }
-
-  // Render file list in explorer
-  function renderFileList() {
-    fileListEl.innerHTML = '';
-    for (const filename in files) {
-      const li = document.createElement('li');
-      li.textContent = filename;
-      li.setAttribute('tabindex', '0');
-      li.setAttribute('role', 'listitem');
-
-      if (filename === activeTab) {
-        li.classList.add('active');
+  <script>
+    // State
+    const files = {};
+    let openFiles = [];
+    let activeFile = null;
+    const extensions = [
+      {
+        id: 'live-server',
+        name: 'Live Server',
+        description: 'Serve your pages with live reload.',
+        enabled: false,
+      },
+      {
+        id: 'prettier',
+        name: 'Prettier',
+        description: 'Code formatter.',
+        enabled: false,
+      },
+      {
+        id: 'eslint',
+        name: 'ESLint',
+        description: 'Lint your JavaScript code.',
+        enabled: false,
       }
+    ];
 
-      // Click to open
-      li.addEventListener('click', () => {
-        openFile(filename);
-      });
-      // Keyboard accessible
-      li.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          openFile(filename);
-          e.preventDefault();
-        }
-      });
+    // Elements
+    const sidebarButtons = {
+      explorer: document.getElementById('btn-explorer'),
+      search: document.getElementById('btn-search'),
+      run: document.getElementById('btn-run'),
+      extensions: document.getElementById('btn-extensions'),
+      settings: document.getElementById('btn-settings'),
+    };
 
-      // Delete button
-      const delBtn = document.createElement('button');
-      delBtn.textContent = '×';
-      delBtn.className = 'delete-file';
-      delBtn.setAttribute('aria-label', `Delete file ${filename}`);
-      delBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        deleteFile(filename);
-      });
-      li.appendChild(delBtn);
+    const panels = {
+      explorer: document.getElementById('panel-explorer'),
+      search: document.getElementById('panel-search'),
+      run: document.getElementById('panel-run'),
+      extensions: document.getElementById('panel-extensions'),
+      settings: document.getElementById('panel-settings'),
+    };
 
-      fileListEl.appendChild(li);
+    const fileListEl = document.getElementById('file-list');
+    const tabBarEl = document.getElementById('tab-bar');
+    const codeEditor = document.getElementById('code-editor');
+    const newFileNameInput = document.getElementById('new-file-name');
+    const btnNewFile = document.getElementById('btn-new-file');
+    const statusFile = document.getElementById('status-file');
+    const statusCaret = document.getElementById('status-caret');
+    const runIframe = document.getElementById('run-iframe');
+    const btnRunCode = document.getElementById('btn-run-code');
+    const extensionListEl = document.getElementById('extension-list');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    const settingWordWrap = document.getElementById('setting-word-wrap');
+    const settingAutocomplete = document.getElementById('setting-autocomplete');
+    const settingTheme = document.getElementById('setting-theme');
+
+    // Helper Functions
+    function saveFilesToStorage() {
+      localStorage.setItem('vscode_clone_files', JSON.stringify(files));
+      localStorage.setItem('vscode_clone_openFiles', JSON.stringify(openFiles));
+      localStorage.setItem('vscode_clone_activeFile', activeFile);
     }
-  }
 
-  // Render open tabs
-  function renderTabs() {
-    tabBar.innerHTML = '';
-    openTabs.forEach(filename => {
-      const tab = document.createElement('div');
-      tab.className = 'tab';
-      if (filename === activeTab) tab.classList.add('active');
-      tab.setAttribute('role', 'tab');
-      tab.setAttribute('aria-selected', filename === activeTab ? 'true' : 'false');
-      tab.setAttribute('tabindex', filename === activeTab ? '0' : '-1');
-      tab.textContent = filename;
-
-      // Close button
-      const closeBtn = document.createElement('span');
-      closeBtn.className = 'close-btn';
-      closeBtn.textContent = '×';
-      closeBtn.setAttribute('aria-label', `Close ${filename}`);
-      closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeTab(filename);
-      });
-      tab.appendChild(closeBtn);
-
-      // Click to activate tab
-      tab.addEventListener('click', () => {
-        setActiveTab(filename);
-      });
-
-      // Keyboard navigation and activation
-      tab.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          setActiveTab(filename);
-          e.preventDefault();
-        }
-      });
-
-      tabBar.appendChild(tab);
-    });
-  }
-
-  // Open a file (add to tabs if not open)
-  function openFile(filename) {
-    if (!files.hasOwnProperty(filename)) {
-      showModal(`File "${filename}" does not exist.`);
-      return;
-    }
-    if (!openTabs.includes(filename)) {
-      openTabs.push(filename);
-    }
-    setActiveTab(filename);
-    renderTabs();
-    renderFileList();
-    saveState();
-  }
-
-  // Close a tab
-  function closeTab(filename) {
-    if (!openTabs.includes(filename)) return;
-    // If the tab is active, switch to another tab
-    if (activeTab === filename) {
-      const idx = openTabs.indexOf(filename);
-      let newActive = null;
-      if (openTabs.length > 1) {
-        if (idx === 0) newActive = openTabs[1];
-        else newActive = openTabs[idx - 1];
+    function loadFilesFromStorage() {
+      const f = localStorage.getItem('vscode_clone_files');
+      if (f) {
+        try {
+          const parsed = JSON.parse(f);
+          Object.assign(files, parsed);
+        } catch {}
       }
-      activeTab = newActive;
+      const openF = localStorage.getItem('vscode_clone_openFiles');
+      if (openF) {
+        try {
+          openFiles = JSON.parse(openF);
+        } catch {}
+      }
+      const activeF = localStorage.getItem('vscode_clone_activeFile');
+      if (activeF && files[activeF]) {
+        activeFile = activeF;
+      } else if (openFiles.length > 0 && files[openFiles[0]]) {
+        activeFile = openFiles[0];
+      }
     }
-    openTabs = openTabs.filter(f => f !== filename);
-    renderTabs();
-    renderFileList();
-    if (activeTab) {
-      loadActiveTabContent();
-    } else {
-      codeEditor.value = '';
+
+    function updateFileList() {
+      fileListEl.innerHTML = '';
+      for (const fname in files) {
+        const li = document.createElement('li');
+        li.textContent = fname;
+        if (fname === activeFile) li.classList.add('active');
+
+        li.tabIndex = 0;
+        li.setAttribute('role', 'listitem');
+
+        // Click to open
+        li.addEventListener('click', () => openFile(fname));
+        li.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openFile(fname);
+          }
+        });
+
+        // Delete button
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '×';
+        delBtn.className = 'delete-file-btn';
+        delBtn.title = `Delete ${fname}`;
+        delBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          deleteFile(fname);
+        });
+        li.appendChild(delBtn);
+
+        fileListEl.appendChild(li);
+      }
     }
-    saveState();
-  }
 
-  // Set active tab
-  function setActiveTab(filename) {
-    if (!files.hasOwnProperty(filename)) {
-      showModal(`File "${filename}" does not exist.`);
-      return;
+    function openFile(fname) {
+      if (!files[fname]) return;
+      if (!openFiles.includes(fname)) {
+        openFiles.push(fname);
+      }
+      activeFile = fname;
+      renderTabs();
+      loadActiveFileToEditor();
+      updateFileList();
+      updateStatus();
+      saveFilesToStorage();
+      codeEditor.focus();
     }
-    activeTab = filename;
-    renderTabs();
-    renderFileList();
-    loadActiveTabContent();
-    saveState();
-  }
 
-  // Load content of active tab into editor
-  function loadActiveTabContent() {
-    if (!activeTab) return;
-    codeEditor.value = files[activeTab];
-    updateStatusBar();
-  }
+    function renderTabs() {
+      tabBarEl.innerHTML = '';
+      for (const fname of openFiles) {
+        const tab = document.createElement('div');
+        tab.className = 'tab';
+        tab.setAttribute('role', 'tab');
+        tab.setAttribute('tabindex', '0');
+        tab.textContent = fname;
+        if (fname === activeFile) {
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+        } else {
+          tab.setAttribute('aria-selected', 'false');
+        }
 
-  // Save editor content to current file
-  function saveEditorContent() {
-    if (!activeTab) return;
-    files[activeTab] = codeEditor.value;
-    saveState();
-    updateStatusBar('Saved');
-  }
+        tab.addEventListener('click', () => openFile(fname));
+        tab.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openFile(fname);
+          }
+          // Ctrl+W or Cmd+W to close tab
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'w') {
+            e.preventDefault();
+            closeFile(fname);
+          }
+        });
 
-  // Delete a file (and close if open)
-  function deleteFile(filename) {
-    if (!files.hasOwnProperty(filename)) return;
-    if (confirm(`Are you sure you want to delete "${filename}"?`)) {
-      delete files[filename];
-      if (openTabs.includes(filename)) {
-        closeTab(filename);
+        const closeBtn = document.createElement('span');
+        closeBtn.textContent = '×';
+        closeBtn.className = 'close-btn';
+        closeBtn.title = `Close ${fname}`;
+        closeBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          closeFile(fname);
+        });
+        tab.appendChild(closeBtn);
+        tabBarEl.appendChild(tab);
+      }
+    }
+
+    function loadActiveFileToEditor() {
+      if (!activeFile) {
+        codeEditor.value = '';
+        statusFile.textContent = 'No file opened';
+        return;
+      }
+      codeEditor.value = files[activeFile];
+      statusFile.textContent = activeFile;
+    }
+
+    function saveCurrentFile() {
+      if (!activeFile) return;
+      files[activeFile] = codeEditor.value;
+      saveFilesToStorage();
+    }
+
+    function closeFile(fname) {
+      const idx = openFiles.indexOf(fname);
+      if (idx === -1) return;
+      openFiles.splice(idx, 1);
+      if (activeFile === fname) {
+        activeFile = openFiles.length > 0 ? openFiles[Math.max(0, idx - 1)] : null;
+      }
+      renderTabs();
+      loadActiveFileToEditor();
+      updateFileList();
+      updateStatus();
+      saveFilesToStorage();
+    }
+
+    function deleteFile(fname) {
+      if (files[fname]) {
+        delete files[fname];
+      }
+      if (openFiles.includes(fname)) {
+        closeFile(fname);
       } else {
-        renderFileList();
+        updateFileList();
       }
-      saveState();
-    }
-  }
-
-  // Add new file
-  function addNewFile() {
-    const name = newFileNameInput.value.trim();
-    if (!name) {
-      showModal('File name cannot be empty.');
-      return;
-    }
-    if (files.hasOwnProperty(name)) {
-      showModal('File already exists.');
-      return;
-    }
-    files[name] = '';
-    openTabs.push(name);
-    activeTab = name;
-    renderFileList();
-    renderTabs();
-    loadActiveTabContent();
-    newFileNameInput.value = '';
-    saveState();
-  }
-
-  // Update status bar with cursor position and optional message
-  function updateStatusBar(message) {
-    if (message) {
-      statusLeft.textContent = message;
-    } else {
-      statusLeft.textContent = 'Ready';
-    }
-    const pos = getCursorPosition();
-    statusRight.textContent = `Ln ${pos.line}, Col ${pos.col}`;
-  }
-
-  // Get cursor line and column in textarea
-  function getCursorPosition() {
-    const pos = codeEditor.selectionStart;
-    const textBefore = codeEditor.value.substr(0, pos);
-    const lines = textBefore.split('\n');
-    const line = lines.length;
-    const col = lines[lines.length - 1].length + 1;
-    return { line, col };
-  }
-
-  // Insert text at cursor position
-  function insertAtCursor(text) {
-    const start = codeEditor.selectionStart;
-    const end = codeEditor.selectionEnd;
-    const val = codeEditor.value;
-    codeEditor.value = val.substring(0, start) + text + val.substring(end);
-    codeEditor.selectionStart = codeEditor.selectionEnd = start + text.length;
-    codeEditor.focus();
-    updateStatusBar('Ready');
-    saveEditorContent();
-  }
-
-  // Show modal with message
-  function showModal(message) {
-    modalDesc.textContent = message;
-    modalOverlay.style.display = 'flex';
-  }
-
-  // Hide modal
-  function hideModal() {
-    modalOverlay.style.display = 'none';
-  }
-
-  // Sidebar button click handling
-  function activatePanel(panelId, btn) {
-    panels.forEach(p => p.classList.remove('open'));
-    document.getElementById(panelId).classList.add('open');
-    sidebarButtons.forEach(b => {
-      b.classList.remove('active');
-      b.setAttribute('aria-pressed', 'false');
-    });
-    btn.classList.add('active');
-    btn.setAttribute('aria-pressed', 'true');
-  }
-
-  // Search functionality
-  function searchFiles(term) {
-    const lowerTerm = term.toLowerCase();
-    const results = [];
-    for (const [filename, content] of Object.entries(files)) {
-      if (filename.toLowerCase().includes(lowerTerm) || content.toLowerCase().includes(lowerTerm)) {
-        results.push(filename);
+      if (activeFile === fname) {
+        activeFile = null;
+        codeEditor.value = '';
+        statusFile.textContent = 'No file opened';
       }
+      saveFilesToStorage();
     }
-    return results;
-  }
 
-  function renderSearchResults(results) {
-    searchResults.innerHTML = '';
-    if (results.length === 0) {
-      const li = document.createElement('li');
-      li.textContent = 'No results found.';
-      li.style.fontStyle = 'italic';
-      li.tabIndex = -1;
-      searchResults.appendChild(li);
-      return;
+    function updateStatus() {
+      if (!activeFile) {
+        statusCaret.textContent = 'Ln 1, Col 1';
+        return;
+      }
+      const pos = getCaretPosition();
+      statusCaret.textContent = `Ln ${pos.line}, Col ${pos.col}`;
     }
-    results.forEach(filename => {
-      const li = document.createElement('li');
-      li.textContent = filename;
-      li.tabIndex = 0;
-      li.addEventListener('click', () => {
-        openFile(filename);
-        // Switch back to explorer panel after opening file
-        activatePanel('panel-explorer', btnExplorer);
-      });
-      li.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          openFile(filename);
-          activatePanel('panel-explorer', btnExplorer);
-          e.preventDefault();
+
+    function getCaretPosition() {
+      const text = codeEditor.value;
+      const pos = codeEditor.selectionStart;
+      let line = 1, col = 1;
+      for (let i = 0; i < pos; i++) {
+        if (text[i] === '\n') {
+          line++;
+          col = 1;
+        } else {
+          col++;
         }
+      }
+      return { line, col };
+    }
+
+    function addNewFile() {
+      const name = newFileNameInput.value.trim();
+      if (!name) return;
+      if (files[name]) {
+        alert('File already exists.');
+        return;
+      }
+      files[name] = '';
+      newFileNameInput.value = '';
+      openFile(name);
+    }
+
+    // Sidebar switching
+    function switchPanel(panelName) {
+      for (const key in panels) {
+        if (key === panelName) {
+          panels[key].classList.remove('hidden');
+          sidebarButtons[key].classList.add('active');
+          sidebarButtons[key].setAttribute('aria-pressed', 'true');
+        } else {
+          panels[key].classList.add('hidden');
+          sidebarButtons[key].classList.remove('active');
+          sidebarButtons[key].setAttribute('aria-pressed', 'false');
+        }
+      }
+    }
+
+    // Search
+    function performSearch(query) {
+      const resultsEl = document.getElementById('search-results');
+      resultsEl.innerHTML = '';
+      if (!query.trim()) return;
+      const q = query.toLowerCase();
+      for (const fname in files) {
+        const content = files[fname].toLowerCase();
+        if (content.includes(q)) {
+          const li = document.createElement('li');
+          li.textContent = fname;
+          li.tabIndex = 0;
+          li.addEventListener('click', () => openFile(fname));
+          resultsEl.appendChild(li);
+        }
+      }
+    }
+
+    // Extensions rendering
+    function renderExtensions() {
+      extensionListEl.innerHTML = '';
+      extensions.forEach(ext => {
+        const li = document.createElement('li');
+        li.setAttribute('tabindex', '0');
+
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'extension-info';
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'extension-name';
+        nameDiv.textContent = ext.name;
+        infoDiv.appendChild(nameDiv);
+
+        const descDiv = document.createElement('div');
+        descDiv.className = 'extension-desc';
+        descDiv.textContent = ext.description;
+        infoDiv.appendChild(descDiv);
+
+        li.appendChild(infoDiv);
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.textContent = ext.enabled ? 'Disable' : 'Enable';
+        toggleBtn.setAttribute('aria-pressed', ext.enabled ? 'true' : 'false');
+        toggleBtn.addEventListener('click', () => {
+          ext.enabled = !ext.enabled;
+          toggleBtn.textContent = ext.enabled ? 'Disable' : 'Enable';
+          toggleBtn.setAttribute('aria-pressed', ext.enabled ? 'true' : 'false');
+          alert(`Extension "${ext.name}" ${ext.enabled ? 'enabled' : 'disabled'} (no actual effect).`);
+        });
+        li.appendChild(toggleBtn);
+        extensionListEl.appendChild(li);
       });
-      searchResults.appendChild(li);
+    }
+
+    // Run code
+    function runCode() {
+      if (!activeFile) return alert('No file opened.');
+      const ext = activeFile.split('.').pop().toLowerCase();
+      if (ext === 'html' || ext === 'htm') {
+        runIframe.srcdoc = files[activeFile];
+      } else if (ext === 'js') {
+        runIframe.srcdoc = `<script>${files[activeFile]}<\/script>`;
+      } else if (ext === 'css') {
+        alert('Run for CSS files not supported.');
+      } else {
+        alert('Run only supported for HTML and JS files.');
+      }
+    }
+
+    // Modal
+    function showModal(message) {
+      modalOverlay.querySelector('#modal-desc').textContent = message || 'This feature is planned but not implemented yet.';
+      modalOverlay.style.display = 'flex';
+    }
+
+    function closeModal() {
+      modalOverlay.style.display = 'none';
+    }
+
+    // Settings
+    function loadSettings() {
+      const wordWrap = localStorage.getItem('vscode_clone_setting_wordWrap') === 'true';
+      const autocomplete = localStorage.getItem('vscode_clone_setting_autocomplete') !== 'false';
+      const theme = localStorage.getItem('vscode_clone_setting_theme') || 'dark';
+
+      settingWordWrap.checked = wordWrap;
+      settingAutocomplete.checked = autocomplete;
+      settingTheme.value = theme;
+
+      codeEditor.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+
+    function saveSettings() {
+      localStorage.setItem('vscode_clone_setting_wordWrap', settingWordWrap.checked);
+      localStorage.setItem('vscode_clone_setting_autocomplete', settingAutocomplete.checked);
+      localStorage.setItem('vscode_clone_setting_theme', settingTheme.value);
+    }
+
+    // Event Listeners
+
+    btnNewFile.addEventListener('click', addNewFile);
+
+    newFileNameInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        addNewFile();
+      }
     });
-  }
 
-  // Event listeners
+    codeEditor.addEventListener('input', () => {
+      if (!activeFile) return;
+      files[activeFile] = codeEditor.value;
+      updateStatus();
+      saveFilesToStorage();
+    });
 
-  btnAddFile.addEventListener('click', addNewFile);
+    codeEditor.addEventListener('keydown', e => {
+      updateStatus();
+    });
 
-  newFileNameInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      addNewFile();
-      e.preventDefault();
-    }
-  });
+    sidebarButtons.explorer.addEventListener('click', () => switchPanel('explorer'));
+    sidebarButtons.search.addEventListener('click', () => switchPanel('search'));
+    sidebarButtons.run.addEventListener('click', () => switchPanel('run'));
+    sidebarButtons.extensions.addEventListener('click', () => switchPanel('extensions'));
+    sidebarButtons.settings.addEventListener('click', () => switchPanel('settings'));
 
-  codeEditor.addEventListener('input', () => {
-    saveEditorContent();
-    updateStatusBar();
-  });
+    document.getElementById('search-input').addEventListener('input', e => {
+      performSearch(e.target.value);
+    });
 
-  codeEditor.addEventListener('keyup', updateStatusBar);
-  codeEditor.addEventListener('click', updateStatusBar);
-  codeEditor.addEventListener('mouseup', updateStatusBar);
+    document.getElementById('btn-clear-search').addEventListener('click', () => {
+      const input = document.getElementById('search-input');
+      input.value = '';
+      performSearch('');
+      input.focus();
+    });
 
-  ps5InsertTabBtn.addEventListener('click', () => {
-    insertAtCursor('\t');
-  });
+    btnRunCode.addEventListener('click', runCode);
 
-  ps5InsertNewlineBtn.addEventListener('click', () => {
-    insertAtCursor('\n');
-  });
+    modalCloseBtn.addEventListener('click', closeModal);
 
-  modalClose.addEventListener('click', () => {
-    hideModal();
-  });
+    settingWordWrap.addEventListener('change', () => {
+      codeEditor.style.whiteSpace = settingWordWrap.checked ? 'pre-wrap' : 'pre';
+      saveSettings();
+    });
 
-  // Sidebar buttons panel switching
-  btnExplorer.addEventListener('click', () => activatePanel('panel-explorer', btnExplorer));
-  btnSearch.addEventListener('click', () => activatePanel('panel-search', btnSearch));
-  btnRun.addEventListener('click', () => activatePanel('panel-run', btnRun));
-  btnExtensions.addEventListener('click', () => activatePanel('panel-extensions', btnExtensions));
-  btnSettings.addEventListener('click', () => activatePanel('panel-settings', btnSettings));
+    settingAutocomplete.addEventListener('change', () => {
+      saveSettings();
+    });
 
-  // Search input events
-  searchInput.addEventListener('input', () => {
-    const term = searchInput.value.trim();
-    if (term.length === 0) {
-      searchResults.innerHTML = '';
-      return;
-    }
-    const results = searchFiles(term);
-    renderSearchResults(results);
-  });
+    settingTheme.addEventListener('change', () => {
+      // For now only dark is implemented
+      if (settingTheme.value !== 'dark') {
+        alert('Light theme is not implemented yet.');
+        settingTheme.value = 'dark';
+      }
+      saveSettings();
+    });
 
-  btnClearSearch.addEventListener('click', () => {
-    searchInput.value = '';
-    searchResults.innerHTML = '';
-    searchInput.focus();
-  });
+    // PS5 Buttons
+    document.getElementById('btn-insert-tab').addEventListener('click', () => {
+      const start = codeEditor.selectionStart;
+      const end = codeEditor.selectionEnd;
+      const val = codeEditor.value;
+      codeEditor.value = val.substring(0, start) + '\t' + val.substring(end);
+      codeEditor.selectionStart = codeEditor.selectionEnd = start + 1;
+      codeEditor.focus();
+      if (activeFile) {
+        files[activeFile] = codeEditor.value;
+        saveFilesToStorage();
+      }
+      updateStatus();
+    });
 
-  // Keyboard shortcuts
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      saveEditorContent();
-      showModal('File saved!');
-      setTimeout(() => hideModal(), 1000);
-    }
-    // Ctrl+W or Cmd+W close active tab
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'w') {
-      e.preventDefault();
-      if (activeTab) closeTab(activeTab);
-    }
-  });
+    document.getElementById('btn-insert-newline').addEventListener('click', () => {
+      const start = codeEditor.selectionStart;
+      const end = codeEditor.selectionEnd;
+      const val = codeEditor.value;
+      codeEditor.value = val.substring(0, start) + '\n' + val.substring(end);
+      codeEditor.selectionStart = codeEditor.selectionEnd = start + 1;
+      codeEditor.focus();
+      if (activeFile) {
+        files[activeFile] = codeEditor.value;
+        saveFilesToStorage();
+      }
+      updateStatus();
+    });
 
-  // Initialize app
-  init();
-  updateStatusBar();
+    // Initialization
+    loadFilesFromStorage();
+    updateFileList();
+    renderTabs();
+    loadActiveFileToEditor();
+    updateStatus();
+    renderExtensions();
+    loadSettings();
 
-})();
-</script>
-
+  </script>
 </body>
 </html>
