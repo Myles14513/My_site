@@ -310,7 +310,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-  // Your Firebase config here
+  // Firebase config & initialization (keep your own config here)
   const firebaseConfig = {
     apiKey: "AIzaSyCYS5BIrIVCnUiEfEhXxbzorqft1xJIxTg",
     authDomain: "idek-81ffd.firebaseapp.com",
@@ -334,23 +334,23 @@
   const btnSaveFiles = document.getElementById('btn-save-files');
   const btnLoadFiles = document.getElementById('btn-load-files');
   const saveLoadCodeInput = document.getElementById('save-load-code');
+  const editorContainer = document.getElementById('editor-container');
 
   // Files data structure: { filename: { content, language } }
   const files = {};
-  let openTabs = []; // filenames currently open in tabs
+  let openTabs = [];
   let activeFile = null;
 
-  // Helper: detect language by file extension
+  // Detect language by file extension
   function detectLanguage(filename) {
     if(filename.endsWith('.html')) return 'html';
     if(filename.endsWith('.css')) return 'css';
     if(filename.endsWith('.js')) return 'javascript';
     if(filename.endsWith('.py')) return 'python';
-    if(filename.endsWith('.comp')) return 'comp';
     return 'plaintext';
   }
 
-  // Add a file to the files object and UI
+  // Add file
   function addFile(name) {
     if(!name) {
       alert('Please enter a file name');
@@ -361,8 +361,10 @@
       return;
     }
     files[name] = { content: '', language: detectLanguage(name) };
+    saveFilesToLocal();
     renderFileList();
     openFile(name);
+    newFileNameInput.value = '';
   }
 
   // Render file list in sidebar
@@ -375,11 +377,9 @@
       li.setAttribute('role', 'button');
       if(name === activeFile) li.classList.add('active');
 
-      // Click to open file
       li.onclick = () => openFile(name);
       li.onkeydown = e => { if(e.key === 'Enter' || e.key === ' ') openFile(name); };
 
-      // Delete button
       const delBtn = document.createElement('button');
       delBtn.textContent = '×';
       delBtn.title = 'Delete file';
@@ -389,13 +389,13 @@
         if(confirm(`Delete file "${name}"?`)) {
           closeFile(name);
           delete files[name];
+          saveFilesToLocal();
           if(activeFile === name) {
             activeFile = null;
             if(Object.keys(files).length) openFile(Object.keys(files)[0]);
             else renderTabs();
           }
           renderFileList();
-          saveFilesToLocal();
         }
       };
       li.appendChild(delBtn);
@@ -404,24 +404,69 @@
     });
   }
 
-  // Open a file (show tab + content)
+  // Open file - with .comp preview support
   function openFile(name) {
     if(!files[name]) return;
-    // Save current content before switching
-    if(activeFile) {
+
+    // Save current file content before switching
+    if(activeFile && activeFile !== name && !activeFile.endsWith('.comp')) {
       files[activeFile].content = codeEditor.value;
+      saveFilesToLocal();
     }
+
     activeFile = name;
     if(!openTabs.includes(name)) openTabs.push(name);
     renderTabs();
-    loadFileContent(name);
+
+    if(name.endsWith('.comp')) {
+      // Hide editor textarea
+      codeEditor.style.display = 'none';
+
+      // Remove existing iframe if any
+      let existingPreview = document.getElementById('preview-iframe');
+      if(existingPreview) existingPreview.remove();
+
+      // Create preview iframe
+      const preview = document.createElement('iframe');
+      preview.id = 'preview-iframe';
+      preview.style.width = '100%';
+      preview.style.height = '100%';
+      preview.style.border = 'none';
+
+      editorContainer.appendChild(preview);
+
+      // The .comp file content should be the filename to preview
+      const targetFileName = files[name].content.trim();
+
+      if(files[targetFileName]) {
+        // Create a blob URL for the target file content to load in iframe
+        const blob = new Blob([files[targetFileName].content], {type: 'text/html'});
+        const url = URL.createObjectURL(blob);
+        preview.src = url;
+      } else if(targetFileName === '') {
+        preview.srcdoc = `<body style="background:#1e1e1e;color:#d4d4d4;padding:20px;font-family:sans-serif;">
+          No target file specified inside <strong>${name}</strong>. Edit this .comp file and type the filename you want to preview.</body>`;
+      } else {
+        preview.srcdoc = `<body style="background:#1e1e1e;color:#d4d4d4;padding:20px;font-family:sans-serif;">
+          Target file <strong>${targetFileName}</strong> does not exist.</body>`;
+      }
+    } else {
+      // Show editor textarea and remove iframe if exists
+      codeEditor.style.display = 'block';
+      const existingPreview = document.getElementById('preview-iframe');
+      if(existingPreview) existingPreview.remove();
+
+      loadFileContent(name);
+    }
   }
 
   // Close file tab
   function closeFile(name) {
-    // Save current if active
     if(activeFile === name) {
-      files[name].content = codeEditor.value;
+      if(!name.endsWith('.comp')) {
+        files[name].content = codeEditor.value;
+        saveFilesToLocal();
+      }
       activeFile = null;
     }
     openTabs = openTabs.filter(n => n !== name);
@@ -438,10 +483,8 @@
       tab.textContent = name;
       tab.title = name;
 
-      // Clicking tab switches to file
       tab.onclick = () => openFile(name);
 
-      // Close button on tab
       const closeBtn = document.createElement('span');
       closeBtn.className = 'close-btn';
       closeBtn.textContent = '×';
@@ -456,7 +499,7 @@
     });
   }
 
-  // Load file content into editor
+  // Load file content into editor textarea
   function loadFileContent(name) {
     codeEditor.value = files[name].content;
     updateStatusBar();
@@ -499,71 +542,57 @@
   codeEditor.addEventListener('keyup', updateStatusBar);
   codeEditor.addEventListener('click', updateStatusBar);
 
-  // On input update current file content live
-  codeEditor.addEventListener('input', () => {
-    if(activeFile) {
-      files[activeFile].content = codeEditor.value;
-    }
+  // Add new file button
+  btnAddFile.addEventListener('click', () => {
+    addFile(newFileNameInput.value.trim());
+  });
+  newFileNameInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter') addFile(newFileNameInput.value.trim());
   });
 
-  // Save files object to localStorage
-  function saveFilesToLocal() {
-    if (activeFile) {
+  // Save files to localStorage every 20 seconds
+  setInterval(() => {
+    if(activeFile && !activeFile.endsWith('.comp')) {
       files[activeFile].content = codeEditor.value;
     }
+    saveFilesToLocal();
+  }, 20000);
+
+  // Save all files to localStorage
+  function saveFilesToLocal() {
     try {
-      localStorage.setItem('vscode_web_files', JSON.stringify(files));
-      statusLeft.textContent = "Auto-saved locally";
-      setTimeout(() => statusLeft.textContent = "Ready", 1500);
+      localStorage.setItem('vs_files', JSON.stringify(files));
     } catch(e) {
-      console.warn("Failed to save to localStorage:", e);
+      console.warn('Failed to save files locally:', e);
     }
   }
 
-  // Load files object from localStorage on startup
+  // Load files from localStorage on start
   function loadFilesFromLocal() {
-    const saved = localStorage.getItem('vscode_web_files');
-    if (saved) {
+    const saved = localStorage.getItem('vs_files');
+    if(saved) {
       try {
-        const loadedFiles = JSON.parse(saved);
-        for (const k in files) delete files[k];
-        Object.assign(files, loadedFiles);
-
+        const parsed = JSON.parse(saved);
+        Object.assign(files, parsed);
         openTabs = Object.keys(files);
         if(openTabs.length > 0) {
           openFile(openTabs[0]);
         }
         renderFileList();
-        renderTabs();
-        statusLeft.textContent = "Loaded from localStorage";
-        setTimeout(() => statusLeft.textContent = "Ready", 1500);
       } catch(e) {
-        console.warn("Failed to load from localStorage:", e);
+        console.warn('Failed to parse saved files:', e);
       }
     }
   }
+  loadFilesFromLocal();
 
-  // Auto-save every 20 seconds
-  setInterval(saveFilesToLocal, 20000);
+  // Firebase save/load handlers
+  const db = firebase.database();
 
-  // When new file created, save immediately locally
-  btnAddFile.addEventListener('click', () => {
-    addFile(newFileNameInput.value.trim());
-    saveFilesToLocal();
-    newFileNameInput.value = '';
-  });
-  newFileNameInput.addEventListener('keydown', e => {
-    if(e.key === 'Enter') {
-      addFile(newFileNameInput.value.trim());
-      saveFilesToLocal();
-      newFileNameInput.value = '';
-    }
-  });
-
-  // Firebase Save
   btnSaveFiles.addEventListener("click", () => {
-    if (activeFile) {
+    if (activeFile && !activeFile.endsWith('.comp')) {
       files[activeFile].content = codeEditor.value;
+      saveFilesToLocal();
     }
 
     const code = saveLoadCodeInput.value.trim();
@@ -584,7 +613,6 @@
       });
   });
 
-  // Firebase Load
   btnLoadFiles.addEventListener("click", () => {
     const code = saveLoadCodeInput.value.trim();
     if (!code) {
@@ -622,19 +650,11 @@
         renderFileList();
         statusLeft.textContent = "Loaded!";
         setTimeout(() => statusLeft.textContent = "Ready", 2000);
-
-        // Also save loaded files locally
-        saveFilesToLocal();
       })
       .catch((error) => {
         statusLeft.textContent = "Load failed";
         alert("Load error: " + error.message);
       });
-  });
-
-  // Load from localStorage on page load
-  window.addEventListener('load', () => {
-    loadFilesFromLocal();
   });
 </script>
 
