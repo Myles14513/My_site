@@ -3,230 +3,314 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>VS Code Web Editor (Pixel Perfect Dark Theme)</title>
+<title>VS Code Web Clone</title>
 <style>
-  /* Reset and base */
-  *, *::before, *::after {
-    box-sizing: border-box;
+  /* === Variables & Reset === */
+  :root {
+    --bg: #1e1e1e;
+    --sidebar-bg: #252526;
+    --panel-bg: #333333;
+    --text-color: #d4d4d4;
+    --tab-bg: #2d2d2d;
+    --tab-active-bg: #1e1e1e;
+    --tab-border: #3c3c3c;
+    --accent: #007acc;
+    --status-bg: #007acc;
+    --error-color: #e81123;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-mono: Consolas, 'Courier New', monospace;
+  }
+  * {
+    margin:0; padding:0; box-sizing: border-box;
   }
   html, body {
-    margin: 0; padding: 0; height: 100%; width: 100%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #1e1e1e;
-    color: #d4d4d4;
-    overflow: hidden; /* prevent browser scroll */
+    height: 100%;
+    background: var(--bg);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    user-select: none;
+    overflow: hidden;
   }
-  /* Main container fills entire viewport */
+  button {
+    cursor: pointer;
+  }
+  button:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* === Layout === */
   #app {
     display: flex;
     height: 100vh;
     width: 100vw;
-    user-select: none;
   }
 
-  /* Sidebar - Explorer */
+  /* Sidebar */
   #sidebar {
-    flex: 0 0 240px; /* fixed width */
-    height: 100vh;
-    background-color: #252526;
+    width: 48px;
+    background: var(--sidebar-bg);
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #333;
+    align-items: center;
+    padding: 10px 0;
+    border-right: 1px solid var(--tab-border);
   }
-  #sidebar header {
-    font-weight: 600;
-    font-size: 13px;
-    line-height: 22px;
-    padding: 10px 16px 8px;
+  #sidebar button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 20px;
+    margin: 8px 0;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    border-radius: 6px;
+    transition: background 0.2s;
+  }
+  #sidebar button:hover,
+  #sidebar button.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* Panels container */
+  #panel-container {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+  }
+
+  /* Explorer panel */
+  #explorer {
+    width: 240px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--tab-border);
+    display: flex;
+    flex-direction: column;
+  }
+  #explorer header {
     color: #ccc;
-    border-bottom: 1px solid #333;
-    user-select: text;
+    font-weight: 700;
+    padding: 12px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--tab-border);
+    user-select: none;
   }
-  #file-explorer {
+  #file-tree {
     flex: 1;
     overflow-y: auto;
-    padding: 6px 0;
+    padding: 10px 12px;
   }
-  ul.file-list {
-    margin: 0; padding: 0;
+  ul.tree {
     list-style: none;
+    padding-left: 16px;
   }
-  ul.file-list li {
-    padding: 6px 12px;
+  ul.tree li {
     cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 4px 6px;
+    border-radius: 4px;
     font-size: 13px;
-    border-radius: 3px;
-    user-select: text;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
   }
-  ul.file-list li.active {
-    background-color: #094771;
+  ul.tree li:hover {
+    background: #333333;
+  }
+  ul.tree li.active {
+    background: var(--accent);
     color: white;
   }
-  ul.file-list li:hover:not(.active) {
-    background-color: #333333;
-    color: white;
+  ul.tree li.folder > span.toggle {
+    cursor: pointer;
+    margin-right: 6px;
+    user-select: none;
   }
-  ul.file-list li button.delete-file {
+  ul.tree li.folder > span.toggle::before {
+    content: '▶';
+    display: inline-block;
+    transform-origin: center;
+    transition: transform 0.15s ease;
+  }
+  ul.tree li.folder.expanded > span.toggle::before {
+    transform: rotate(90deg);
+  }
+  ul.tree li.folder > ul {
+    display: none;
+  }
+  ul.tree li.folder.expanded > ul {
+    display: block;
+  }
+  ul.tree li button.delete-file {
     background: transparent;
     border: none;
     color: #888;
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
-    padding: 0 4px;
-    user-select: none;
+    margin-left: 8px;
+    border-radius: 4px;
+    padding: 0 6px;
   }
-  ul.file-list li button.delete-file:hover {
-    color: #e81123;
+  ul.tree li button.delete-file:hover {
+    color: var(--error-color);
   }
 
   #new-file-container {
-    padding: 8px 16px;
-    border-top: 1px solid #333;
+    padding: 10px 16px;
+    border-top: 1px solid var(--tab-border);
     display: flex;
-    gap: 8px;
-    user-select: text;
+    gap: 6px;
   }
-  #new-file-container input {
+  #new-file-name {
     flex: 1;
     padding: 6px 8px;
     font-size: 13px;
+    border-radius: 4px;
     border: none;
-    border-radius: 3px;
-    background-color: #1e1e1e;
-    color: #d4d4d4;
-    outline-offset: -2px;
+    outline: none;
   }
-  #new-file-container input::placeholder {
-    color: #666;
-  }
-  #new-file-container input:focus {
-    outline: 1px solid #007acc;
-  }
-  #new-file-container button {
-    width: 60px;
-    padding: 6px 0;
-    background-color: #0e639c;
+  #btn-add-file {
+    background: var(--accent);
     border: none;
-    border-radius: 3px;
     color: white;
+    font-weight: 700;
     font-size: 13px;
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.15s ease;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background 0.3s;
   }
-  #new-file-container button:hover {
-    background-color: #1177cc;
+  #btn-add-file:hover {
+    background: #3399ff;
   }
 
-  /* Main editor area */
-  #main-area {
+  /* Editor & Tabs container */
+  #editor-container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    background-color: #1e1e1e;
+    background: var(--bg);
   }
 
-  /* Tabs bar */
+  /* Tab bar */
   #tab-bar {
-    flex: 0 0 38px;
-    background-color: #252526;
-    border-bottom: 1px solid #333;
+    height: 38px;
+    background: var(--tab-bg);
+    border-bottom: 1px solid var(--tab-border);
     display: flex;
     align-items: center;
-    padding-left: 8px;
+    padding-left: 12px;
+    user-select: none;
     overflow-x: auto;
     scrollbar-width: none; /* Firefox */
   }
   #tab-bar::-webkit-scrollbar {
-    height: 6px;
+    display: none; /* Chrome */
   }
-  #tab-bar::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 3px;
-  }
-  #tab-bar::-webkit-scrollbar-track {
-    background: #252526;
-  }
-
   .tab {
     display: flex;
     align-items: center;
-    background-color: #2d2d2d;
-    color: #ccc;
-    padding: 6px 14px 7px 14px;
-    margin-right: 2px;
+    padding: 6px 12px;
+    margin-right: 4px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    background: var(--tab-bg);
+    color: var(--text-color);
     font-size: 13px;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
     cursor: pointer;
-    user-select: none;
     position: relative;
     white-space: nowrap;
-    line-height: 1.2;
   }
   .tab.active {
-    background-color: #1e1e1e;
+    background: var(--tab-active-bg);
+    border-bottom: 1px solid var(--tab-active-bg);
     color: white;
-    border-bottom: 1px solid #1e1e1e;
+    font-weight: 700;
   }
   .tab:hover:not(.active) {
-    background-color: #3c3c3c;
-    color: white;
+    background: #3c3c3c;
   }
-  .tab .close-btn {
-    margin-left: 8px;
+  .tab .close-tab {
+    margin-left: 10px;
     font-weight: 700;
     color: #888;
     cursor: pointer;
-    font-size: 14px;
     user-select: none;
   }
-  .tab .close-btn:hover {
-    color: #e81123;
+  .tab .close-tab:hover {
+    color: var(--error-color);
   }
 
-  /* Editor container */
-  #editor-container {
+  /* Editor area */
+  #code-area {
     flex: 1;
     position: relative;
-    height: calc(100vh - 38px - 22px); /* full height minus tab bar and status bar */
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
   }
-  textarea#code-editor {
-    width: 100%;
-    height: 100%;
-    background-color: #1e1e1e;
+
+  #code-editor {
+    flex: 1;
+    background: transparent;
+    color: var(--text-color);
     border: none;
-    color: #d4d4d4;
-    font-family: Consolas, 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 14px;
+    padding: 12px 14px;
     line-height: 1.4;
-    padding: 12px;
     resize: none;
     outline: none;
     overflow: auto;
     white-space: pre;
   }
 
-  /* Status bar */
-  #status-bar {
-    flex: 0 0 22px;
-    background-color: #007acc;
-    color: white;
-    font-size: 12px;
+  /* Overlay preview panel */
+  #preview-overlay {
+    position: absolute;
+    top: 38px; /* below tab bar */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #121212;
+    border-top: 1px solid var(--tab-border);
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+  }
+  #preview-toolbar {
+    height: 32px;
+    background: var(--panel-bg);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0 12px;
-    user-select: none;
-    line-height: 22px;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--tab-border);
+  }
+  #preview-toolbar button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: auto;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  #preview-toolbar button:hover {
+    background: var(--accent);
+  }
+  #preview-iframe {
+    flex: 1;
+    border: none;
+    background: white;
   }
 
-  /* PS5 Insert Buttons Overlay */
+  /* PS5 Buttons */
   #ps5-buttons {
     position: absolute;
     bottom: 40px;
@@ -234,298 +318,755 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    user-select: none;
+    z-index: 20;
   }
   #ps5-buttons button {
-    background-color: #0e639c;
+    background: var(--accent);
     border: none;
     color: white;
-    padding: 6px 14px;
-    border-radius: 3px;
+    padding: 6px 12px;
     font-size: 14px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    user-select: none;
   }
   #ps5-buttons button:hover {
-    background-color: #1177cc;
+    background: #3399ff;
+  }
+
+  /* Status bar */
+  #status-bar {
+    height: 22px;
+    background: var(--status-bg);
+    color: white;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    user-select: none;
+  }
+  #status-left {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  #status-right {
+    font-family: var(--font-mono);
+  }
+
+  /* Scrollbar styling */
+  #file-tree::-webkit-scrollbar,
+  #code-editor::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  #file-tree::-webkit-scrollbar-thumb,
+  #code-editor::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+  }
+  #file-tree::-webkit-scrollbar-track,
+  #code-editor::-webkit-scrollbar-track {
+    background: #222;
+  }
+
+  /* Search Panel */
+  #search-panel {
+    width: 320px;
+    background: var(--sidebar-bg);
+    border-left: 1px solid var(--tab-border);
+    display: none;
+    flex-direction: column;
+  }
+  #search-panel header {
+    color: #ccc;
+    font-weight: 700;
+    padding: 12px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--tab-border);
+    user-select: none;
+  }
+  #search-input {
+    padding: 8px 12px;
+    margin: 10px 16px;
+    font-size: 13px;
+    border-radius: 4px;
+    border: none;
+    outline: none;
+    font-family: var(--font-mono);
+  }
+  #search-results {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 10px 16px;
+    font-size: 12px;
+  }
+  #search-results div.result-item {
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  #search-results div.result-item:hover {
+    background: #3a3d41;
+  }
+
+  /* Run & Debug Panel */
+  #run-panel {
+    width: 320px;
+    background: var(--sidebar-bg);
+    border-left: 1px solid var(--tab-border);
+    display: none;
+    flex-direction: column;
+    color: var(--text-color);
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  /* Extensions Panel */
+  #extensions-panel {
+    width: 320px;
+    background: var(--sidebar-bg);
+    border-left: 1px solid var(--tab-border);
+    display: none;
+    flex-direction: column;
+    color: var(--text-color);
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  /* Folder/File Icons */
+  .icon-folder::before {
+    content: "📁";
+    margin-right: 6px;
+  }
+  .icon-file::before {
+    content: "📄";
+    margin-right: 6px;
   }
 </style>
 </head>
 <body>
 
-<div id="app" role="application">
+<div id="app" role="application" aria-label="Visual Studio Code Web Clone">
 
-  <!-- Sidebar -->
-  <nav id="sidebar" aria-label="File Explorer">
-    <header>EXPLORER</header>
-    <div id="file-explorer" tabindex="0">
-      <ul class="file-list" id="file-list" role="list">
-        <!-- Files will appear here -->
-      </ul>
-    </div>
-    <div id="new-file-container">
-      <input
-        type="text"
-        id="new-file-name"
-        placeholder="New file name..."
-        aria-label="New file name"
-        autocomplete="off"
-        spellcheck="false"
-      />
-      <button id="btn-add-file" aria-label="Add new file">Add</button>
-    </div>
+  <!-- Sidebar with icons -->
+  <nav id="sidebar" aria-label="Sidebar">
+    <button id="btn-explorer" title="Explorer" aria-pressed="true" aria-label="Show Explorer panel">📁</button>
+    <button id="btn-search" title="Search" aria-pressed="false" aria-label="Show Search panel">🔍</button>
+    <button id="btn-run" title="Run & Debug" aria-pressed="false" aria-label="Show Run and Debug panel">▶️</button>
+    <button id="btn-extensions" title="Extensions" aria-pressed="false" aria-label="Show Extensions panel">🧩</button>
   </nav>
 
-  <!-- Main editor area -->
-  <main id="main-area" role="main">
-    <div id="tab-bar" role="tablist" aria-label="Open files">
-      <!-- Tabs will be added here -->
-    </div>
-    <div id="editor-container">
-      <textarea
-        id="code-editor"
-        spellcheck="false"
-        aria-label="Code editor"
-        autocorrect="off"
-        autocapitalize="off"
-      ></textarea>
+  <!-- Panels container -->
+  <section id="panel-container">
 
-      <!-- PS5 buttons overlay -->
-      <div id="ps5-buttons" aria-label="PS5 editor controls">
-        <button id="btn-insert-tab" title="Insert Tab (2 spaces)">Tab</button>
-        <button id="btn-insert-newline" title="Insert Newline">Newline</button>
+    <!-- Explorer panel -->
+    <section id="explorer" role="region" aria-label="File Explorer" tabindex="0">
+      <header>EXPLORER</header>
+      <div id="file-tree" tabindex="0" aria-label="File tree"></div>
+      <div id="new-file-container">
+        <input id="new-file-name" type="text" aria-label="New file name" placeholder="New file name or folder (end with /)" />
+        <button id="btn-add-file" aria-label="Add new file or folder">Add</button>
       </div>
-    </div>
-    <footer id="status-bar" aria-live="polite">
-      <div id="status-left">Ready</div>
-      <div id="status-right">Ln 1, Col 1</div>
-    </footer>
-  </main>
+    </section>
+
+    <!-- Editor container -->
+    <section id="editor-container" role="main">
+
+      <!-- Tabs bar -->
+      <div id="tab-bar" role="tablist" aria-label="Open files"></div>
+
+      <!-- Code editing area -->
+      <div id="code-area">
+        <textarea id="code-editor" spellcheck="false" aria-label="Code editor"></textarea>
+
+        <!-- Preview overlay -->
+        <div id="preview-overlay" role="region" aria-label="Live preview">
+          <div id="preview-toolbar">
+            <button id="btn-close-preview" aria-label="Close preview">Close Preview ✕</button>
+          </div>
+          <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+
+        <!-- PS5 buttons -->
+        <div id="ps5-buttons" aria-label="PS5 editor controls">
+          <button id="btn-insert-tab" title="Insert tab (2 spaces)">Tab</button>
+          <button id="btn-insert-newline" title="Insert newline">Newline</button>
+        </div>
+      </div>
+
+      <!-- Status bar -->
+      <footer id="status-bar" aria-live="polite">
+        <div id="status-left">Ready</div>
+        <div id="status-right">Ln 1, Col 1</div>
+      </footer>
+
+    </section>
+
+    <!-- Search panel -->
+    <section id="search-panel" role="region" aria-label="Search panel" tabindex="0">
+      <header>SEARCH</header>
+      <input id="search-input" type="search" placeholder="Search files..." aria-label="Search files" />
+      <div id="search-results" aria-live="polite" aria-relevant="additions"></div>
+    </section>
+
+    <!-- Run & Debug panel -->
+    <section id="run-panel" role="region" aria-label="Run and Debug panel" tabindex="0">
+      <header>RUN & DEBUG</header>
+      <p style="padding: 12px;">(Coming soon...)</p>
+    </section>
+
+    <!-- Extensions panel -->
+    <section id="extensions-panel" role="region" aria-label="Extensions panel" tabindex="0">
+      <header>EXTENSIONS</header>
+      <p style="padding: 12px;">(Coming soon...)</p>
+    </section>
+
+  </section>
 
 </div>
 
 <script>
-  const fileListEl = document.getElementById('file-list');
-  const newFileNameInput = document.getElementById('new-file-name');
-  const btnAddFile = document.getElementById('btn-add-file');
-  const tabBar = document.getElementById('tab-bar');
-  const codeEditor = document.getElementById('code-editor');
-  const statusLeft = document.getElementById('status-left');
-  const statusRight = document.getElementById('status-right');
+  // === Data Structures ===
+  let files = {
+    "index.html": "<!-- Start coding here -->\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>My Page</title>\n</head>\n<body>\n  <h1>Hello world!</h1>\n</body>\n</html>",
+    "style.css": "body {\n  background-color: #121212;\n  color: white;\n  font-family: sans-serif;\n}\n",
+    "script.js": "console.log('Hello from JS!');\n",
+    "folder/": {}
+  };
 
-  const files = {};
+  // Store folder structure as nested objects. Flat files have string values.
+  // Files with key ending with "/" are folders with nested contents.
+
+  // Current open tabs and active file
   let openTabs = [];
   let activeFile = null;
 
-  function detectLanguage(filename) {
-    if(filename.endsWith('.html')) return 'html';
-    if(filename.endsWith('.css')) return 'css';
-    if(filename.endsWith('.js')) return 'javascript';
-    if(filename.endsWith('.py')) return 'python';
-    return 'plaintext';
+  // UI elements
+  const fileTreeEl = document.getElementById('file-tree');
+  const tabBarEl = document.getElementById('tab-bar');
+  const codeEditorEl = document.getElementById('code-editor');
+  const previewOverlayEl = document.getElementById('preview-overlay');
+  const previewIframeEl = document.getElementById('preview-iframe');
+  const statusLeftEl = document.getElementById('status-left');
+  const statusRightEl = document.getElementById('status-right');
+  const btnInsertTab = document.getElementById('btn-insert-tab');
+  const btnInsertNewline = document.getElementById('btn-insert-newline');
+  const btnClosePreview = document.getElementById('btn-close-preview');
+
+  const btnExplorer = document.getElementById('btn-explorer');
+  const btnSearch = document.getElementById('btn-search');
+  const btnRun = document.getElementById('btn-run');
+  const btnExtensions = document.getElementById('btn-extensions');
+
+  const explorerPanel = document.getElementById('explorer');
+  const searchPanel = document.getElementById('search-panel');
+  const runPanel = document.getElementById('run-panel');
+  const extensionsPanel = document.getElementById('extensions-panel');
+
+  const newFileInput = document.getElementById('new-file-name');
+  const btnAddFile = document.getElementById('btn-add-file');
+
+  // === Functions ===
+
+  // Deep clone for files object
+  function cloneFiles(obj) {
+    return JSON.parse(JSON.stringify(obj));
   }
 
-  function addFile(name) {
-    if(!name) {
-      alert('Please enter a file name');
-      return;
-    }
-    if(files[name]) {
-      alert('File already exists');
-      return;
-    }
-    files[name] = { content: '', language: detectLanguage(name) };
-    renderFileList();
-    openFile(name);
-    newFileNameInput.value = '';
+  // Save files object to localStorage
+  function saveFiles() {
+    localStorage.setItem('vsweb-files', JSON.stringify(files));
   }
-
-  function renderFileList() {
-    fileListEl.innerHTML = '';
-    Object.keys(files).forEach(name => {
-      const li = document.createElement('li');
-      li.textContent = name;
-      li.tabIndex = 0;
-      li.setAttribute('role', 'button');
-      if(name === activeFile) li.classList.add('active');
-      li.onclick = () => openFile(name);
-      li.onkeydown = e => { if(e.key === 'Enter' || e.key === ' ') openFile(name); };
-      const delBtn = document.createElement('button');
-      delBtn.textContent = '×';
-      delBtn.title = 'Delete file';
-      delBtn.className = 'delete-file';
-      delBtn.onclick = (e) => {
-        e.stopPropagation();
-        if(confirm(`Delete file "${name}"?`)) {
-          closeFile(name);
-          delete files[name];
-          if(activeFile === name) {
-            activeFile = null;
-            if(Object.keys(files).length) openFile(Object.keys(files)[0]);
-            else renderTabs();
-          }
-          renderFileList();
-        }
-      };
-      li.appendChild(delBtn);
-      fileListEl.appendChild(li);
-    });
-  }
-
-  function openFile(name) {
-    if(!files[name]) return;
-    if(activeFile) {
-      files[activeFile].content = codeEditor.value;
-    }
-    activeFile = name;
-    if(!openTabs.includes(name)) openTabs.push(name);
-    renderTabs();
-    loadFileContent(name);
-  }
-
-  function closeFile(name) {
-    if(activeFile === name) {
-      files[name].content = codeEditor.value;
-      activeFile = null;
-    }
-    openTabs = openTabs.filter(n => n !== name);
-    renderTabs();
-    if(!activeFile && openTabs.length) openFile(openTabs[0]);
-  }
-
-  function renderTabs() {
-    tabBar.innerHTML = '';
-    openTabs.forEach(name => {
-      const tab = document.createElement('div');
-      tab.className = 'tab' + (name === activeFile ? ' active' : '');
-      tab.textContent = name;
-      tab.title = name;
-      tab.setAttribute('role', 'tab');
-      tab.setAttribute('aria-selected', name === activeFile ? 'true' : 'false');
-      tab.tabIndex = name === activeFile ? 0 : -1;
-
-      tab.onclick = () => openFile(name);
-      tab.onkeydown = e => {
-        if(e.key === 'ArrowRight') {
-          e.preventDefault();
-          const idx = openTabs.indexOf(name);
-          if(idx < openTabs.length -1) openFile(openTabs[idx +1]);
-        } else if(e.key === 'ArrowLeft') {
-          e.preventDefault();
-          const idx = openTabs.indexOf(name);
-          if(idx > 0) openFile(openTabs[idx -1]);
-        } else if(e.key === 'Delete' || e.key === 'Backspace') {
-          e.preventDefault();
-          closeFile(name);
-        }
-      };
-
-      const closeBtn = document.createElement('span');
-      closeBtn.className = 'close-btn';
-      closeBtn.textContent = '×';
-      closeBtn.title = 'Close file';
-      closeBtn.tabIndex = 0;
-      closeBtn.setAttribute('role', 'button');
-      closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        closeFile(name);
-      };
-      closeBtn.onkeydown = e => {
-        if(e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          closeFile(name);
-        }
-      };
-      tab.appendChild(closeBtn);
-
-      tabBar.appendChild(tab);
-    });
-  }
-
-  function loadFileContent(name) {
-    codeEditor.value = files[name].content;
-    updateStatusBar();
-    codeEditor.focus();
-  }
-
-  function updateStatusBar() {
-    const pos = getCaretPosition(codeEditor);
-    statusRight.textContent = `Ln ${pos.line}, Col ${pos.col}`;
-  }
-  function getCaretPosition(el) {
-    const pos = el.selectionStart;
-    const text = el.value.substr(0, pos);
-    const lines = text.split('\n');
-    return {
-      line: lines.length,
-      col: lines[lines.length - 1].length + 1
-    };
-  }
-
-  // PS5 Insert Buttons
-  document.getElementById('btn-insert-tab').onclick = () => {
-    insertAtCursor(codeEditor, '  ');
-  };
-  document.getElementById('btn-insert-newline').onclick = () => {
-    insertAtCursor(codeEditor, '\n');
-  };
-  function insertAtCursor(textarea, text) {
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const val = textarea.value;
-    textarea.value = val.slice(0, start) + text + val.slice(end);
-    textarea.selectionStart = textarea.selectionEnd = start + text.length;
-    textarea.focus();
-    updateStatusBar();
-  }
-
-  codeEditor.addEventListener('keyup', updateStatusBar);
-  codeEditor.addEventListener('click', updateStatusBar);
-
-  btnAddFile.addEventListener('click', () => {
-    addFile(newFileNameInput.value.trim());
-  });
-  newFileNameInput.addEventListener('keydown', e => {
-    if(e.key === 'Enter') addFile(newFileNameInput.value.trim());
-  });
-
-  // Start with a default file
-  addFile('index.html');
-  files['index.html'].content = "<!-- Start coding here -->\n<div>Hello world!</div>";
-  openFile('index.html');
-  updateStatusBar();
-
-  // Save content on page unload (to cookie)
-  window.addEventListener('beforeunload', () => {
-    if(activeFile) files[activeFile].content = codeEditor.value;
-    // Save files object as JSON string in cookie
-    document.cookie = "vscode_web_editor=" + encodeURIComponent(JSON.stringify(files)) + "; path=/; max-age=31536000"; // 1 year
-  });
-
-  // Load content from cookie on page load
-  window.addEventListener('load', () => {
-    const cookies = document.cookie.split('; ').reduce((acc, cur) => {
-      const [key,val] = cur.split('=');
-      acc[key] = val;
-      return acc;
-    }, {});
-    if(cookies.vscode_web_editor) {
+  // Load files from localStorage or default
+  function loadFiles() {
+    const data = localStorage.getItem('vsweb-files');
+    if(data) {
       try {
-        const savedFiles = JSON.parse(decodeURIComponent(cookies.vscode_web_editor));
-        if(savedFiles && typeof savedFiles === 'object') {
-          for(const key in savedFiles) {
-            files[key] = savedFiles[key];
-          }
-          openTabs = Object.keys(files);
-          if(openTabs.length) openFile(openTabs[0]);
-          renderFileList();
-          renderTabs();
-        }
+        files = JSON.parse(data);
       } catch {
-        // ignore invalid JSON
+        files = {};
       }
     }
+  }
+
+  // Check if a key is folder
+  function isFolder(key) {
+    return key.endsWith('/');
+  }
+
+  // Render file tree recursively
+  function renderFileTree(container, treeObj, path='') {
+    container.innerHTML = '';
+    const ul = document.createElement('ul');
+    ul.classList.add('tree');
+    buildTree(ul, treeObj, path);
+    container.appendChild(ul);
+  }
+  function buildTree(parentUl, treeObj, basePath) {
+    for (const key in treeObj) {
+      const fullPath = basePath + key;
+      const li = document.createElement('li');
+
+      if (isFolder(key)) {
+        li.classList.add('folder');
+        li.setAttribute('aria-expanded', 'false');
+        const toggleSpan = document.createElement('span');
+        toggleSpan.classList.add('toggle');
+        toggleSpan.tabIndex = 0;
+        toggleSpan.setAttribute('role', 'button');
+        toggleSpan.setAttribute('aria-label', 'Toggle folder ' + key.slice(0, -1));
+        toggleSpan.addEventListener('click', e => {
+          e.stopPropagation();
+          li.classList.toggle('expanded');
+          const expanded = li.classList.contains('expanded');
+          li.setAttribute('aria-expanded', expanded);
+        });
+        toggleSpan.addEventListener('keydown', e => {
+          if(e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleSpan.click();
+          }
+        });
+        toggleSpan.textContent = '';
+        li.appendChild(toggleSpan);
+
+        const folderName = document.createElement('span');
+        folderName.textContent = key.slice(0, -1);
+        folderName.classList.add('icon-folder');
+        folderName.tabIndex = 0;
+        folderName.setAttribute('role', 'treeitem');
+        folderName.setAttribute('aria-expanded', 'false');
+        folderName.addEventListener('click', () => {
+          toggleSpan.click();
+        });
+        folderName.addEventListener('keydown', e => {
+          if(e.key === 'Enter') {
+            e.preventDefault();
+            toggleSpan.click();
+          }
+        });
+        li.appendChild(folderName);
+
+        const innerUl = document.createElement('ul');
+        innerUl.style.display = 'none';
+        li.appendChild(innerUl);
+
+        if (files[key]) {
+          buildTree(innerUl, files[key], fullPath);
+        }
+
+        parentUl.appendChild(li);
+      } else {
+        li.classList.add('file');
+        li.textContent = key;
+        li.classList.add('icon-file');
+        li.tabIndex = 0;
+        li.setAttribute('role', 'treeitem');
+        li.addEventListener('click', () => {
+          openFile(fullPath);
+        });
+        li.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            openFile(fullPath);
+          }
+        });
+
+        // Delete button
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '×';
+        delBtn.classList.add('delete-file');
+        delBtn.title = 'Delete file';
+        delBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if(confirm('Delete file "'+ fullPath +'"?')) {
+            deleteFile(fullPath);
+          }
+        });
+        li.appendChild(delBtn);
+
+        parentUl.appendChild(li);
+      }
+    }
+  }
+
+  // Resolve file/folder parent object by path (like "folder/file.txt")
+  function getParentFolder(path) {
+    const parts = path.split('/');
+    if(parts.length === 1) return files;
+    parts.pop();
+    let obj = files;
+    for(const p of parts) {
+      if(p === '') continue;
+      obj = obj[p + '/'];
+      if(!obj) return null;
+    }
+    return obj;
+  }
+
+  // Delete file or folder
+  function deleteFile(path) {
+    const parent = getParentFolder(path);
+    if(!parent) return;
+    const parts = path.split('/');
+    const key = parts[parts.length - 1];
+    delete parent[key];
+    saveFiles();
+    refreshFileTree();
+    if(activeFile === path) closeTab(path);
+  }
+
+  // Add new file or folder
+  function addNewFile(name) {
+    if(!name) return alert('Please enter a file or folder name.');
+    if(name.includes('\\')) return alert('Invalid character \\ not allowed.');
+    if(name.startsWith('/')) name = name.slice(1);
+    const isFolder = name.endsWith('/');
+    let parent = files;
+    let parts = name.split('/');
+    if(parts.length > 1) {
+      const last = parts.pop();
+      for(const part of parts) {
+        if(!parent[part + '/']) parent[part + '/'] = {};
+        parent = parent[part + '/'];
+      }
+      if(isFolder) {
+        parent[last + '/'] = parent[last + '/'] || {};
+      } else {
+        if(parent[last]) return alert('File already exists.');
+        parent[last] = '';
+      }
+    } else {
+      if(isFolder) {
+        if(files[name]) return alert('Folder already exists.');
+        files[name] = {};
+      } else {
+        if(files[name]) return alert('File already exists.');
+        files[name] = '';
+      }
+    }
+    saveFiles();
+    refreshFileTree();
+    newFileInput.value = '';
+  }
+
+  // Open file in tab and editor
+  function openFile(path) {
+    if(!filesExists(path)) return alert('File does not exist.');
+    if(openTabs.includes(path)) {
+      setActiveTab(path);
+      return;
+    }
+    openTabs.push(path);
+    renderTabs();
+    setActiveTab(path);
+  }
+
+  // Check if file exists (resolving nested folders)
+  function filesExists(path) {
+    const parts = path.split('/');
+    let obj = files;
+    for(let i = 0; i < parts.length; i++) {
+      let p = parts[i];
+      if(i === parts.length - 1) {
+        // last part: file
+        if(obj[p] !== undefined) return true;
+        if(obj[p + '/'] !== undefined) return false;
+        return false;
+      } else {
+        if(obj[p + '/'] !== undefined) obj = obj[p + '/'];
+        else return false;
+      }
+    }
+    return false;
+  }
+
+  // Render tabs
+  function renderTabs() {
+    tabBarEl.innerHTML = '';
+    for(const path of openTabs) {
+      const tab = document.createElement('div');
+      tab.className = 'tab';
+      if(path === activeFile) tab.classList.add('active');
+      tab.textContent = fileNameFromPath(path);
+      tab.title = path;
+
+      // Close button
+      const closeBtn = document.createElement('span');
+      closeBtn.className = 'close-tab';
+      closeBtn.textContent = '×';
+      closeBtn.title = 'Close tab';
+      closeBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        closeTab(path);
+      });
+
+      tab.appendChild(closeBtn);
+      tab.addEventListener('click', () => setActiveTab(path));
+
+      tabBarEl.appendChild(tab);
+    }
+  }
+
+  // Get file name from path
+  function fileNameFromPath(path) {
+    if(path.endsWith('/')) return path.slice(0, -1);
+    return path.split('/').pop();
+  }
+
+  // Set active tab
+  function setActiveTab(path) {
+    if(!openTabs.includes(path)) return;
+    activeFile = path;
+    renderTabs();
+    loadFileToEditor(path);
+  }
+
+  // Load file content to editor
+  function loadFileToEditor(path) {
+    const content = getFileContent(path);
+    codeEditorEl.value = content;
+    updateStatusBar();
+    codeEditorEl.focus();
+  }
+
+  // Get file content from nested files object
+  function getFileContent(path) {
+    const parts = path.split('/');
+    let obj = files;
+    for(let i = 0; i < parts.length; i++) {
+      let p = parts[i];
+      if(i === parts.length - 1) {
+        return obj[p] || '';
+      } else {
+        obj = obj[p + '/'];
+        if(!obj) return '';
+      }
+    }
+    return '';
+  }
+
+  // Save editor content to files object
+  function saveEditorContent() {
+    if(!activeFile) return;
+    let parent = getParentFolder(activeFile);
+    if(!parent) return;
+    const fileName = activeFile.split('/').pop();
+    parent[fileName] = codeEditorEl.value;
+    saveFiles();
+  }
+
+  // Close tab
+  function closeTab(path) {
+    openTabs = openTabs.filter(p => p !== path);
+    if(activeFile === path) {
+      if(openTabs.length > 0) {
+        setActiveTab(openTabs[openTabs.length - 1]);
+      } else {
+        activeFile = null;
+        codeEditorEl.value = '';
+      }
+    }
+    renderTabs();
+  }
+
+  // Update status bar (line, column)
+  function updateStatusBar() {
+    const pos = codeEditorEl.selectionStart;
+    const lines = codeEditorEl.value.substr(0, pos).split('\n');
+    const line = lines.length;
+    const col = lines[lines.length - 1].length + 1;
+    statusRightEl.textContent = `Ln ${line}, Col ${col}`;
+
+    statusLeftEl.textContent = activeFile ? fileNameFromPath(activeFile) : 'Ready';
+  }
+
+  // Insert text at cursor position in textarea
+  function insertAtCursor(text) {
+    const start = codeEditorEl.selectionStart;
+    const end = codeEditorEl.selectionEnd;
+    const val = codeEditorEl.value;
+    codeEditorEl.value = val.substring(0, start) + text + val.substring(end);
+    codeEditorEl.selectionStart = codeEditorEl.selectionEnd = start + text.length;
+    codeEditorEl.focus();
+    updateStatusBar();
+    saveEditorContent();
+  }
+
+  // Syntax highlight basic (for display below textarea, optional)
+  // For now, skipped because complex in textarea.
+  // Can consider replacing textarea with contenteditable or CodeMirror later.
+
+  // Preview update
+  function updatePreview() {
+    if(!activeFile) return;
+    // We try to generate HTML preview if current file is html or if index.html exists
+    let htmlToShow = '';
+    if(activeFile.endsWith('.html')) {
+      htmlToShow = codeEditorEl.value;
+    } else if (files['index.html']) {
+      htmlToShow = files['index.html'];
+    }
+    const blob = new Blob([htmlToShow], {type: 'text/html'});
+    const url = URL.createObjectURL(blob);
+    previewIframeEl.src = url;
+  }
+
+  // Toggle preview overlay
+  function togglePreview(show) {
+    if(show === undefined) {
+      show = previewOverlayEl.style.display === 'flex' ? false : true;
+    }
+    previewOverlayEl.style.display = show ? 'flex' : 'none';
+    if(show) {
+      updatePreview();
+    } else {
+      previewIframeEl.src = 'about:blank';
+      codeEditorEl.focus();
+    }
+  }
+
+  // Search logic
+  function performSearch(query) {
+    const resultsEl = document.getElementById('search-results');
+    resultsEl.innerHTML = '';
+    if(!query) return;
+    query = query.toLowerCase();
+    // Search all files content
+    function recurseFiles(obj, base='') {
+      for(const key in obj) {
+        if(isFolder(key)) {
+          recurseFiles(obj[key], base + key);
+        } else {
+          const content = obj[key].toLowerCase();
+          if(content.includes(query)) {
+            const snippet = getSnippet(obj[key], query);
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.textContent = `${base + key}: ${snippet}`;
+            div.title = base + key;
+            div.tabIndex = 0;
+            div.addEventListener('click', () => {
+              openFile(base + key);
+              togglePreview(false);
+            });
+            div.addEventListener('keydown', e => {
+              if(e.key === 'Enter') div.click();
+            });
+            resultsEl.appendChild(div);
+          }
+        }
+      }
+    }
+    recurseFiles(files);
+  }
+  function getSnippet(text, query) {
+    const idx = text.toLowerCase().indexOf(query);
+    if(idx === -1) return '';
+    const start = Math.max(0, idx - 10);
+    const end = Math.min(text.length, idx + query.length + 10);
+    return '...' + text.substring(start, end).replace(/\n/g,' ') + '...';
+  }
+
+  // Panel switching
+  function showPanel(name) {
+    [explorerPanel, searchPanel, runPanel, extensionsPanel].forEach(p => {
+      p.style.display = 'none';
+    });
+    btnExplorer.setAttribute('aria-pressed', 'false');
+    btnSearch.setAttribute('aria-pressed', 'false');
+    btnRun.setAttribute('aria-pressed', 'false');
+    btnExtensions.setAttribute('aria-pressed', 'false');
+
+    switch(name) {
+      case 'explorer':
+        explorerPanel.style.display = 'flex';
+        btnExplorer.setAttribute('aria-pressed', 'true');
+        break;
+      case 'search':
+        searchPanel.style.display = 'flex';
+        btnSearch.setAttribute('aria-pressed', 'true');
+        break;
+      case 'run':
+        runPanel.style.display = 'flex';
+        btnRun.setAttribute('aria-pressed', 'true');
+        break;
+      case 'extensions':
+        extensionsPanel.style.display = 'flex';
+        btnExtensions.setAttribute('aria-pressed', 'true');
+        break;
+    }
+  }
+
+  // PS5 buttons events
+  btnInsertTab.addEventListener('click', () => {
+    insertAtCursor('  ');
   });
+  btnInsertNewline.addEventListener('click', () => {
+    insertAtCursor('\n');
+  });
+
+  // Close preview button
+  btnClosePreview.addEventListener('click', () => {
+    togglePreview(false);
+  });
+
+  // File add button
+  btnAddFile.addEventListener('click', () => {
+    addNewFile(newFileInput.value.trim());
+  });
+
+  // Search input event
+  document.getElementById('search-input').addEventListener('input', e => {
+    performSearch(e.target.value.trim());
+  });
+
+  // Sidebar buttons event listeners
+  btnExplorer.addEventListener('click', () => showPanel('explorer'));
+  btnSearch.addEventListener('click', () => showPanel('search'));
+  btnRun.addEventListener('click', () => showPanel('run'));
+  btnExtensions.addEventListener('click', () => showPanel('extensions'));
+
+  // Editor input event (save & update status)
+  codeEditorEl.addEventListener('input', () => {
+    saveEditorContent();
+    updateStatusBar();
+  });
+
+  // Update status bar on cursor movement
+  codeEditorEl.addEventListener('click', updateStatusBar);
+  codeEditorEl.addEventListener('keyup', updateStatusBar);
+
+  // Initial load
+  loadFiles();
+  refreshFileTree();
+  showPanel('explorer');
+
+  // Open first file by default
+  const firstFile = findFirstFile(files);
+  if(firstFile) openFile(firstFile);
+
+  // === Helpers ===
+
+  function refreshFileTree() {
+    renderFileTree(fileTreeEl, files);
+  }
+  function findFirstFile(tree, base='') {
+    for(const key in tree) {
+      if(isFolder(key)) {
+        const found = findFirstFile(tree[key], base + key);
+        if(found) return found;
+      } else {
+        return base + key;
+      }
+    }
+    return null;
+  }
+
 </script>
 
 </body>
