@@ -499,68 +499,73 @@ firebase.initializeApp(firebaseConfig);
     if(e.key === 'Enter') addFile(newFileNameInput.value.trim());
   });
 
-   // Save files to Firebase
-  btnSaveFiles.addEventListener('click', () => {
+   //<script>
+  const db = firebase.database();
+
+  btnSaveFiles.addEventListener("click", () => {
     if (activeFile) {
       files[activeFile].content = codeEditor.value;
     }
+
     const code = saveLoadCodeInput.value.trim();
     if (!code) {
-      alert('Please enter a save/load code.');
+      alert("Please enter a code");
       return;
     }
-    statusLeft.textContent = 'Saving...';
-    firebase.database().ref(`codes/${code}`).set(files)
+
+    statusLeft.textContent = "Saving...";
+    db.ref("codes/" + code).set(files)
       .then(() => {
-        statusLeft.textContent = 'Save successful!';
-        setTimeout(() => { statusLeft.textContent = 'Ready'; }, 2000);
+        statusLeft.textContent = "Saved!";
+        setTimeout(() => statusLeft.textContent = "Ready", 2000);
       })
-      .catch((err) => {
-        statusLeft.textContent = 'Save failed!';
-        alert('Error saving files: ' + err.message);
+      .catch((error) => {
+        statusLeft.textContent = "Save failed";
+        alert("Save error: " + error.message);
       });
   });
 
-  // Load files from Firebase
-  btnLoadFiles.addEventListener('click', () => {
+  btnLoadFiles.addEventListener("click", () => {
     const code = saveLoadCodeInput.value.trim();
     if (!code) {
-      alert('Please enter a save/load code.');
+      alert("Please enter a code");
       return;
     }
-    statusLeft.textContent = 'Loading...';
-    firebase.database().ref(`codes/${code}`).once('value')
-      .then(snapshot => {
+
+    statusLeft.textContent = "Loading...";
+    db.ref("codes/" + code).once("value")
+      .then((snapshot) => {
         if (!snapshot.exists()) {
-          statusLeft.textContent = 'No data found for that code.';
-          alert('No saved data found for that code.');
+          statusLeft.textContent = "No data found";
+          alert("No data found for that code.");
           return;
         }
+
         const loadedFiles = snapshot.val();
 
-        // Reset current state
-        for (const k in files) delete files[k];
+        for (const key in files) delete files[key];
         Object.assign(files, loadedFiles);
         openTabs = [];
         activeFile = null;
 
-        // Open all loaded files as tabs
         for (const name in files) {
           openTabs.push(name);
         }
-        if (openTabs.length) {
+
+        if (openTabs.length > 0) {
           openFile(openTabs[0]);
         } else {
-          codeEditor.value = '';
+          codeEditor.value = "";
           renderTabs();
         }
+
         renderFileList();
-        statusLeft.textContent = 'Load successful!';
-        setTimeout(() => { statusLeft.textContent = 'Ready'; }, 2000);
+        statusLeft.textContent = "Loaded!";
+        setTimeout(() => statusLeft.textContent = "Ready", 2000);
       })
-      .catch(err => {
-        statusLeft.textContent = 'Load failed!';
-        alert('Error loading files: ' + err.message);
+      .catch((error) => {
+        statusLeft.textContent = "Load failed";
+        alert("Load error: " + error.message);
       });
   });
 </script>
