@@ -499,13 +499,13 @@ firebase.initializeApp(firebaseConfig);
     if(e.key === 'Enter') addFile(newFileNameInput.value.trim());
   });
 
-  // Save files to Firebase
+   // Save files to Firebase
   btnSaveFiles.addEventListener('click', () => {
-    if(activeFile) {
+    if (activeFile) {
       files[activeFile].content = codeEditor.value;
     }
     const code = saveLoadCodeInput.value.trim();
-    if(!code) {
+    if (!code) {
       alert('Please enter a save/load code.');
       return;
     }
@@ -524,31 +524,35 @@ firebase.initializeApp(firebaseConfig);
   // Load files from Firebase
   btnLoadFiles.addEventListener('click', () => {
     const code = saveLoadCodeInput.value.trim();
-    if(!code) {
+    if (!code) {
       alert('Please enter a save/load code.');
       return;
     }
     statusLeft.textContent = 'Loading...';
     firebase.database().ref(`codes/${code}`).once('value')
       .then(snapshot => {
-        if(!snapshot.exists()) {
+        if (!snapshot.exists()) {
           statusLeft.textContent = 'No data found for that code.';
           alert('No saved data found for that code.');
           return;
         }
         const loadedFiles = snapshot.val();
-        // Overwrite current files
-        for(const k in files) delete files[k];
+
+        // Reset current state
+        for (const k in files) delete files[k];
         Object.assign(files, loadedFiles);
-        // Open first file or none
-        openTabs = Object.keys(files);
-        if(openTabs.length) openFile(openTabs[0]);
-        else {
+        openTabs = [];
+        activeFile = null;
+
+        // Open all loaded files as tabs
+        for (const name in files) {
+          openTabs.push(name);
+        }
+        if (openTabs.length) {
+          openFile(openTabs[0]);
+        } else {
           codeEditor.value = '';
-          activeFile = null;
-          openTabs = [];
           renderTabs();
-          renderFileList();
         }
         renderFileList();
         statusLeft.textContent = 'Load successful!';
@@ -559,9 +563,6 @@ firebase.initializeApp(firebaseConfig);
         alert('Error loading files: ' + err.message);
       });
   });
-
-  // Initialize with default file
-  addFile('index.html');
 </script>
 
 </body>
