@@ -2,17 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>VS Code Web Clone with Monaco & Full UI</title>
-
-<!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json" />
-
-<!-- iOS Meta tags for standalone mode -->
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="VSCodeClone" />
-<link rel="apple-touch-icon" href="icons/icon-192.png" />
 
 <!-- VS Code font -->
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
@@ -32,8 +23,6 @@
     color: #cccccc;
     user-select: none;
     overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-user-select: text; /* enable text selection on mobile */
   }
 
   /* Layout */
@@ -41,9 +30,10 @@
     display: flex;
     height: 100vh;
     width: 100vw;
+    position: relative;
   }
 
-  /* Sidebar (left) */
+  /* Sidebar (left icons only) */
   #sidebar {
     width: 48px;
     background-color: #252526;
@@ -52,6 +42,7 @@
     flex-direction: column;
     align-items: center;
     padding: 8px 0;
+    z-index: 1001; /* Above overlay */
   }
 
   #sidebar button {
@@ -69,7 +60,6 @@
     justify-content: center;
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
     position: relative;
-    -webkit-tap-highlight-color: transparent;
   }
   #sidebar button:hover {
     background-color: #333333;
@@ -97,33 +87,68 @@
     z-index: 999;
   }
 
-  /* Panels container (right of sidebar) */
+  /* Panels container overlay */
   #panels {
+    position: fixed;
+    top: 0;
+    left: 48px; /* Next to sidebar */
+    height: 100vh;
     width: 280px;
     background-color: #1e1e1e;
-    border-right: 1px solid #333333;
-    display: flex;
-    flex-direction: column;
+    border-left: 1px solid #333333;
+    box-shadow: 3px 0 12px rgba(0,0,0,0.8);
+    overflow-y: auto;
+    transition: transform 0.25s ease;
+    z-index: 1000;
+    transform: translateX(-100%);
+  }
+
+  #panels.active {
+    transform: translateX(0);
+  }
+
+  /* Overlay background behind panels */
+  #overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: none;
+  }
+  #overlay.active {
+    display: block;
   }
 
   .panel {
-    flex-grow: 1;
-    display: none;
-    overflow-y: auto;
     padding: 12px;
     font-size: 14px;
-  }
-  .panel.active {
-    display: block;
+    color: #cccccc;
   }
 
   .panel header {
     font-weight: 700;
     font-size: 13px;
     letter-spacing: 0.05em;
-    color: #cccccc;
     margin-bottom: 12px;
     user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Close button in panel header */
+  .panel header button.close-panel {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+  .panel header button.close-panel:hover {
+    color: #e81123;
   }
 
   /* File Explorer list */
@@ -178,7 +203,6 @@
     color: #cccccc;
     font-size: 14px;
     outline: none;
-    -webkit-appearance: none;
   }
   #new-file-name::placeholder {
     color: #777777;
@@ -302,6 +326,9 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    /* Fill entire width minus sidebar width */
+    width: calc(100vw - 48px);
+    height: 100vh;
   }
 
   /* Tabs */
@@ -312,6 +339,7 @@
     align-items: center;
     overflow-x: auto;
     border-bottom: 1px solid #333333;
+    user-select: none;
   }
   #tab-bar::-webkit-scrollbar {
     height: 8px;
@@ -321,7 +349,6 @@
     border-radius: 4px;
   }
   .tab {
-    user-select: none;
     padding: 6px 14px;
     margin: 0 2px;
     font-size: 14px;
@@ -375,53 +402,19 @@
     user-select: none;
   }
 
-  /* PS5 insert buttons */
+  /* Hide PS5 buttons as requested */
   #ps5-buttons {
-    position: absolute;
-    bottom: 36px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    z-index: 10;
-  }
-  #ps5-buttons button {
-    background-color: #007acc;
-    border: none;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.15s ease-in-out;
-  }
-  #ps5-buttons button:hover {
-    background-color: #005f9e;
+    display: none !important;
   }
 
-  /* Mobile optimizations */
+  /* Responsive tweaks */
   @media (max-width: 600px) {
-    #sidebar {
-      width: 48px;
-    }
     #panels {
-      display: none;
+      width: 80vw;
+      left: 48px;
     }
     #main-area {
-      flex-grow: 1;
-    }
-    #tab-bar {
-      overflow-x: scroll;
-    }
-    #sidebar button {
-      width: 48px;
-      height: 48px;
-      font-size: 28px;
-    }
-    #ps5-buttons button {
-      padding: 12px 20px;
-      font-size: 18px;
+      width: calc(100vw - 48px);
     }
   }
 </style>
@@ -438,10 +431,16 @@
     <button id="btn-settings" data-tooltip="Settings" aria-pressed="false" aria-label="Settings">⚙️</button>
   </nav>
 
-  <section id="panels" aria-label="Panels">
+  <!-- Overlay behind panels for click to close -->
+  <div id="overlay" aria-hidden="true"></div>
+
+  <section id="panels" aria-label="Panels" tabindex="-1">
     <!-- Explorer -->
-    <section id="panel-explorer" class="panel active" role="region" aria-label="Explorer Panel">
-      <header>EXPLORER</header>
+    <section id="panel-explorer" class="panel" role="region" aria-label="Explorer Panel" hidden>
+      <header>
+        EXPLORER
+        <button class="close-panel" aria-label="Close Explorer Panel">&times;</button>
+      </header>
       <ul id="file-list" role="list" aria-label="Files"></ul>
       <div id="new-file-container">
         <input type="text" id="new-file-name" placeholder="New file name..." aria-label="New file name" />
@@ -450,30 +449,42 @@
     </section>
 
     <!-- Search -->
-    <section id="panel-search" class="panel" role="region" aria-label="Search Panel">
-      <header>SEARCH</header>
+    <section id="panel-search" class="panel" role="region" aria-label="Search Panel" hidden>
+      <header>
+        SEARCH
+        <button class="close-panel" aria-label="Close Search Panel">&times;</button>
+      </header>
       <input id="search-input" type="search" placeholder="Search in files..." aria-label="Search in files" />
       <ul id="search-results" role="list" aria-label="Search Results"></ul>
     </section>
 
     <!-- Run -->
-    <section id="panel-run" class="panel" role="region" aria-label="Run and Debug Panel">
-      <header>RUN AND DEBUG</header>
+    <section id="panel-run" class="panel" role="region" aria-label="Run and Debug Panel" hidden>
+      <header>
+        RUN AND DEBUG
+        <button class="close-panel" aria-label="Close Run Panel">&times;</button>
+      </header>
       <button id="btn-run-code" aria-label="Run code">Run Code</button>
       <iframe id="run-iframe" sandbox="allow-scripts allow-same-origin" title="Run code output"></iframe>
     </section>
 
     <!-- Extensions -->
-    <section id="panel-extensions" class="panel" role="region" aria-label="Extensions Panel">
-      <header>EXTENSIONS</header>
+    <section id="panel-extensions" class="panel" role="region" aria-label="Extensions Panel" hidden>
+      <header>
+        EXTENSIONS
+        <button class="close-panel" aria-label="Close Extensions Panel">&times;</button>
+      </header>
       <ul id="extension-list">
         <li>Extension Marketplace (Coming Soon)</li>
       </ul>
     </section>
 
     <!-- Settings -->
-    <section id="panel-settings" class="panel" role="region" aria-label="Settings Panel">
-      <header>SETTINGS</header>
+    <section id="panel-settings" class="panel" role="region" aria-label="Settings Panel" hidden>
+      <header>
+        SETTINGS
+        <button class="close-panel" aria-label="Close Settings Panel">&times;</button>
+      </header>
       <form id="settings-form">
         <label for="setting-theme">Theme:
           <select id="setting-theme" name="setting-theme" aria-label="Select theme">
@@ -493,10 +504,6 @@
     <div id="tab-bar" role="tablist" aria-label="Open Files Tabs"></div>
     <div id="editor-container">
       <div id="editor" aria-label="Code Editor"></div>
-      <div id="ps5-buttons" aria-label="PS5 insert buttons">
-        <button id="btn-insert-tab" aria-label="Insert tab">Insert Tab</button>
-        <button id="btn-insert-newline" aria-label="Insert newline">Insert Newline</button>
-      </div>
     </div>
     <footer id="status-bar" role="contentinfo" aria-live="polite">
       <span id="status-message">Ready</span>
@@ -506,10 +513,8 @@
 </div>
 
 <script>
-  // Load Monaco Editor with AMD loader
   require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs' }});
   require(['vs/editor/editor.main'], function () {
-    // State
     const state = {
       files: {
         'index.html': `<!DOCTYPE html>
@@ -528,276 +533,342 @@
       openTabs: ['index.html'],
       activeFile: 'index.html',
       unsavedFiles: new Set(),
-      currentPanel: 'explorer',
+      currentPanel: null,
       settings: {
         theme: 'vs-dark',
-        fontSize: 14
-      }
+        fontSize: 14,
+      },
     };
 
-    // DOM Elements
-    const fileList = document.getElementById('file-list');
-    const tabBar = document.getElementById('tab-bar');
-    const editorContainer = document.getElementById('editor');
-    const statusMessage = document.getElementById('status-message');
-    const statusPosition = document.getElementById('status-position');
+    // Elements
+    const sidebarButtons = document.querySelectorAll('#sidebar button');
     const panels = {
       explorer: document.getElementById('panel-explorer'),
       search: document.getElementById('panel-search'),
       run: document.getElementById('panel-run'),
       extensions: document.getElementById('panel-extensions'),
-      settings: document.getElementById('panel-settings')
+      settings: document.getElementById('panel-settings'),
     };
+    const overlay = document.getElementById('overlay');
 
-    // Monaco Editor instance
-    let editor = monaco.editor.create(editorContainer, {
-      value: state.files[state.activeFile],
-      language: getLanguage(state.activeFile),
-      theme: state.settings.theme,
-      fontSize: state.settings.fontSize,
-      automaticLayout: true,
-      minimap: { enabled: false }
-    });
+    const fileList = document.getElementById('file-list');
+    const newFileNameInput = document.getElementById('new-file-name');
+    const btnNewFile = document.getElementById('btn-new-file');
 
-    // Helpers
-    function getLanguage(filename) {
-      if (filename.endsWith('.js')) return 'javascript';
-      if (filename.endsWith('.ts')) return 'typescript';
-      if (filename.endsWith('.json')) return 'json';
-      if (filename.endsWith('.css')) return 'css';
-      if (filename.endsWith('.html') || filename.endsWith('.htm')) return 'html';
-      if (filename.endsWith('.py')) return 'python';
-      return 'plaintext';
-    }
+    const tabBar = document.getElementById('tab-bar');
+    const statusMessage = document.getElementById('status-message');
+    const statusPosition = document.getElementById('status-position');
+
+    const btnRunCode = document.getElementById('btn-run-code');
+    const runIframe = document.getElementById('run-iframe');
+
+    const settingThemeSelect = document.getElementById('setting-theme');
+    const settingFontSizeInput = document.getElementById('setting-fontsize');
+    const btnResetSettings = document.getElementById('btn-reset-settings');
+
+    // Monaco editor instance
+    let editor;
 
     function updateFileList() {
       fileList.innerHTML = '';
-      for (const file in state.files) {
+      Object.keys(state.files).forEach(fileName => {
         const li = document.createElement('li');
-        li.textContent = file;
-        li.className = (file === state.activeFile) ? 'active' : '';
+        li.textContent = fileName;
         li.tabIndex = 0;
-        li.setAttribute('role', 'button');
-        li.addEventListener('click', () => openFile(file));
-        li.addEventListener('keydown', e => {
-          if (e.key === 'Enter' || e.key === ' ') openFile(file);
-        });
-        // Delete button
-        if (file !== 'index.html') {
-          const delBtn = document.createElement('button');
-          delBtn.textContent = '×';
-          delBtn.className = 'delete-btn';
-          delBtn.title = 'Delete file';
-          delBtn.addEventListener('click', e => {
-            e.stopPropagation();
-            if (confirm(`Delete ${file}?`)) {
-              delete state.files[file];
-              if (state.activeFile === file) {
-                const files = Object.keys(state.files);
-                openFile(files[0]);
-              }
-              updateFileList();
-              updateTabs();
-            }
-          });
-          li.appendChild(delBtn);
+        li.setAttribute('role', 'listitem');
+        if (fileName === state.activeFile) {
+          li.classList.add('active');
         }
+        // Delete button
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '×';
+        delBtn.className = 'delete-btn';
+        delBtn.title = `Delete ${fileName}`;
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete file "${fileName}"?`)) {
+            delete state.files[fileName];
+            if (state.activeFile === fileName) {
+              // Switch to another file or create new
+              const keys = Object.keys(state.files);
+              if (keys.length) {
+                openFile(keys[0]);
+              } else {
+                addNewFile('index.html');
+              }
+            }
+            updateFileList();
+            updateTabs();
+          }
+        };
+        li.appendChild(delBtn);
+
+        li.onclick = () => openFile(fileName);
+        li.onkeydown = (e) => { if(e.key === 'Enter' || e.key === ' ') openFile(fileName); };
+
         fileList.appendChild(li);
+      });
+    }
+
+    function addNewFile(fileName) {
+      if (!fileName) {
+        alert('Please enter a file name.');
+        return;
       }
+      if (state.files[fileName]) {
+        alert('File already exists.');
+        return;
+      }
+      state.files[fileName] = '';
+      openFile(fileName);
+      updateFileList();
+      updateTabs();
+      newFileNameInput.value = '';
+    }
+
+    btnNewFile.onclick = () => addNewFile(newFileNameInput.value.trim());
+
+    function openFile(fileName) {
+      if (!state.files[fileName]) return;
+      if (!state.openTabs.includes(fileName)) {
+        state.openTabs.push(fileName);
+      }
+      state.activeFile = fileName;
+      updateTabs();
+      updateEditorContent();
     }
 
     function updateTabs() {
       tabBar.innerHTML = '';
-      state.openTabs.forEach(file => {
+      state.openTabs.forEach(fileName => {
         const tab = document.createElement('div');
-        tab.className = 'tab' + (file === state.activeFile ? ' active' : '');
+        tab.className = 'tab';
+        if (fileName === state.activeFile) tab.classList.add('active');
         tab.setAttribute('role', 'tab');
-        tab.setAttribute('tabindex', 0);
-        tab.textContent = file;
+        tab.setAttribute('tabindex', '0');
+        tab.textContent = fileName;
 
         // Close button
         const closeBtn = document.createElement('span');
         closeBtn.className = 'close-btn';
         closeBtn.textContent = '×';
-        closeBtn.title = 'Close tab';
-        closeBtn.addEventListener('click', e => {
+        closeBtn.title = `Close ${fileName}`;
+        closeBtn.onclick = (e) => {
           e.stopPropagation();
-          closeTab(file);
-        });
+          closeTab(fileName);
+        };
         tab.appendChild(closeBtn);
 
-        tab.addEventListener('click', () => openFile(file));
-        tab.addEventListener('keydown', e => {
-          if (e.key === 'Enter' || e.key === ' ') openFile(file);
-          if (e.key === 'Delete' || (e.key === 'Backspace' && e.ctrlKey)) closeTab(file);
-        });
+        tab.onclick = () => openFile(fileName);
+        tab.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') openFile(fileName); };
 
         tabBar.appendChild(tab);
       });
     }
 
-    function openFile(file) {
-      if (!state.files[file]) return;
-      if (!state.openTabs.includes(file)) {
-        state.openTabs.push(file);
-      }
-      state.activeFile = file;
-      editor.setValue(state.files[file]);
-      monaco.editor.setModelLanguage(editor.getModel(), getLanguage(file));
-      updateTabs();
-      updateFileList();
-      updateStatus('Opened ' + file);
-    }
-
-    function closeTab(file) {
-      const idx = state.openTabs.indexOf(file);
+    function closeTab(fileName) {
+      const idx = state.openTabs.indexOf(fileName);
       if (idx === -1) return;
+      if (state.unsavedFiles.has(fileName)) {
+        if (!confirm(`You have unsaved changes in "${fileName}". Close anyway?`)) return;
+      }
       state.openTabs.splice(idx, 1);
-      if (state.activeFile === file) {
-        const nextFile = state.openTabs[idx] || state.openTabs[idx - 1];
-        if (nextFile) openFile(nextFile);
-        else {
-          // No tabs open, reset editor
-          editor.setValue('');
-          state.activeFile = null;
-          updateTabs();
-          updateFileList();
-          updateStatus('No file open');
+      state.unsavedFiles.delete(fileName);
+      if (state.activeFile === fileName) {
+        if (state.openTabs.length) {
+          openFile(state.openTabs[Math.max(0, idx - 1)]);
+        } else {
+          addNewFile('index.html');
         }
       } else {
         updateTabs();
       }
     }
 
-    function updateStatus(message) {
-      statusMessage.textContent = message;
+    function updateEditorContent() {
+      if (!editor) return;
+      editor.setValue(state.files[state.activeFile] || '');
+      editor.setModelLanguage(editor.getModel(), getLanguageFromFile(state.activeFile));
+      editor.focus();
+      updateStatus();
     }
 
-    // Save editor content on change
-    editor.onDidChangeModelContent(() => {
-      if (!state.activeFile) return;
-      state.files[state.activeFile] = editor.getValue();
-      state.unsavedFiles.add(state.activeFile);
-      updateStatus('Editing ' + state.activeFile);
-      updateTabs();
-    });
-
-    // Update cursor position in status bar
-    editor.onDidChangeCursorPosition(e => {
-      statusPosition.textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
-    });
-
-    // New file creation
-    document.getElementById('btn-new-file').addEventListener('click', () => {
-      const input = document.getElementById('new-file-name');
-      const name = input.value.trim();
-      if (!name) return alert('Please enter a file name.');
-      if (state.files[name]) return alert('File already exists.');
-      state.files[name] = '';
-      input.value = '';
-      openFile(name);
-      updateFileList();
-      updateTabs();
-    });
-
-    // Sidebar buttons for panels
-    document.getElementById('btn-explorer').addEventListener('click', () => switchPanel('explorer'));
-    document.getElementById('btn-search').addEventListener('click', () => switchPanel('search'));
-    document.getElementById('btn-run').addEventListener('click', () => switchPanel('run'));
-    document.getElementById('btn-extensions').addEventListener('click', () => switchPanel('extensions'));
-    document.getElementById('btn-settings').addEventListener('click', () => switchPanel('settings'));
-
-    function switchPanel(panel) {
-      if (state.currentPanel === panel) return;
-      state.currentPanel = panel;
-      for (const key in panels) {
-        panels[key].classList.toggle('active', key === panel);
+    // Guess language from file extension
+    function getLanguageFromFile(fileName) {
+      const ext = fileName.split('.').pop().toLowerCase();
+      switch (ext) {
+        case 'js': return 'javascript';
+        case 'ts': return 'typescript';
+        case 'json': return 'json';
+        case 'css': return 'css';
+        case 'html':
+        case 'htm': return 'html';
+        case 'py': return 'python';
+        case 'java': return 'java';
+        case 'c': return 'c';
+        case 'cpp':
+        case 'cc': return 'cpp';
+        case 'cs': return 'csharp';
+        case 'md': return 'markdown';
+        default: return 'plaintext';
       }
-      // Update sidebar buttons aria-pressed & active class
-      document.querySelectorAll('#sidebar button').forEach(btn => {
-        const idMap = {
-          'btn-explorer': 'explorer',
-          'btn-search': 'search',
-          'btn-run': 'run',
-          'btn-extensions': 'extensions',
-          'btn-settings': 'settings'
-        };
-        const panelKey = idMap[btn.id];
-        const isActive = panelKey === panel;
-        btn.classList.toggle('active', isActive);
-        btn.setAttribute('aria-pressed', isActive);
-      });
     }
 
-    // Run code button - outputs html/js/css from open files (only html/js/css supported)
-    document.getElementById('btn-run-code').addEventListener('click', () => {
-      // Get current HTML, CSS, JS from files or empty strings
-      const html = state.files['index.html'] || '';
-      const css = state.files['style.css'] || '';
-      const js = state.files['script.js'] || '';
+    function saveCurrentFile() {
+      if (!editor) return;
+      state.files[state.activeFile] = editor.getValue();
+      state.unsavedFiles.delete(state.activeFile);
+      updateTabs();
+      statusMessage.textContent = `Saved "${state.activeFile}"`;
+    }
 
-      const source = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<style>${css}</style>
-</head>
-<body>
-${html}
-<script>${js}<\/script>
-</body>
-</html>`;
-      const iframe = document.getElementById('run-iframe');
-      iframe.srcdoc = source;
-      updateStatus('Ran code');
+    // Update status bar info
+    function updateStatus() {
+      if (!editor) return;
+      const pos = editor.getPosition();
+      statusPosition.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
+    }
+
+    // Handle editor changes
+    function onEditorChange() {
+      if (!editor) return;
+      const currentContent = editor.getValue();
+      if (state.files[state.activeFile] !== currentContent) {
+        state.unsavedFiles.add(state.activeFile);
+      } else {
+        state.unsavedFiles.delete(state.activeFile);
+      }
+      updateTabs();
+      updateStatus();
+    }
+
+    // Setup Monaco editor
+    editor = monaco.editor.create(document.getElementById('editor'), {
+      value: state.files[state.activeFile],
+      language: getLanguageFromFile(state.activeFile),
+      theme: state.settings.theme,
+      fontSize: state.settings.fontSize,
+      automaticLayout: true,
+      minimap: { enabled: false },
+      scrollbar: {
+        verticalScrollbarSize: 10,
+        horizontalScrollbarSize: 10
+      }
     });
 
-    // Settings form: theme and font size
-    const settingTheme = document.getElementById('setting-theme');
-    const settingFontSize = document.getElementById('setting-fontsize');
-    const btnResetSettings = document.getElementById('btn-reset-settings');
+    editor.onDidChangeModelContent(() => {
+      onEditorChange();
+    });
+    editor.onDidChangeCursorPosition(() => {
+      updateStatus();
+    });
 
-    settingTheme.value = state.settings.theme;
-    settingFontSize.value = state.settings.fontSize;
+    // Save with Ctrl+S or Cmd+S
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveCurrentFile();
+      }
+    });
 
-    settingTheme.addEventListener('change', () => {
-      state.settings.theme = settingTheme.value;
+    // Panel toggle logic
+    function openPanel(name) {
+      if (state.currentPanel === name) {
+        closePanel();
+        return;
+      }
+      state.currentPanel = name;
+      Object.keys(panels).forEach(key => {
+        if (key === name) {
+          panels[key].hidden = false;
+          panels[key].parentElement.classList.add('active');
+          panels[key].querySelector('header').focus();
+          overlay.classList.add('active');
+        } else {
+          panels[key].hidden = true;
+        }
+      });
+      updateSidebarButtons();
+    }
+    function closePanel() {
+      state.currentPanel = null;
+      Object.values(panels).forEach(panel => panel.hidden = true);
+      document.getElementById('panels').classList.remove('active');
+      overlay.classList.remove('active');
+      updateSidebarButtons();
+    }
+    function updateSidebarButtons() {
+      sidebarButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.id === 'btn-' + state.currentPanel);
+        btn.setAttribute('aria-pressed', btn.classList.contains('active'));
+      });
+      document.getElementById('panels').classList.toggle('active', !!state.currentPanel);
+    }
+
+    sidebarButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const panelName = btn.id.replace('btn-', '');
+        openPanel(panelName);
+      });
+    });
+
+    // Close panel on overlay click
+    overlay.addEventListener('click', () => {
+      closePanel();
+    });
+
+    // Close panel close buttons
+    Object.values(panels).forEach(panel => {
+      const closeBtn = panel.querySelector('button.close-panel');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          closePanel();
+          sidebarButtons.forEach(b => b.classList.remove('active'));
+          sidebarButtons.forEach(b => b.setAttribute('aria-pressed', 'false'));
+        });
+      }
+    });
+
+    // New file enter key support
+    newFileNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        addNewFile(newFileNameInput.value.trim());
+      }
+    });
+
+    // Run code button
+    btnRunCode.addEventListener('click', () => {
+      saveCurrentFile();
+      if (state.files['index.html']) {
+        const html = state.files['index.html'];
+        runIframe.srcdoc = html;
+      } else {
+        runIframe.srcdoc = '<p>No index.html found</p>';
+      }
+    });
+
+    // Settings form
+    settingThemeSelect.addEventListener('change', (e) => {
+      state.settings.theme = e.target.value;
       monaco.editor.setTheme(state.settings.theme);
     });
-
-    settingFontSize.addEventListener('change', () => {
-      const val = parseInt(settingFontSize.value, 10);
+    settingFontSizeInput.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
       if (val >= 8 && val <= 40) {
         state.settings.fontSize = val;
         editor.updateOptions({ fontSize: val });
       }
     });
-
     btnResetSettings.addEventListener('click', () => {
-      state.settings.theme = 'vs-dark';
-      state.settings.fontSize = 14;
-      settingTheme.value = state.settings.theme;
-      settingFontSize.value = state.settings.fontSize;
-      monaco.editor.setTheme(state.settings.theme);
-      editor.updateOptions({ fontSize: state.settings.fontSize });
+      state.settings = { theme: 'vs-dark', fontSize: 14 };
+      settingThemeSelect.value = 'vs-dark';
+      settingFontSizeInput.value = 14;
+      monaco.editor.setTheme('vs-dark');
+      editor.updateOptions({ fontSize: 14 });
     });
 
-    // Insert Tab / Newline buttons (for PS5 & accessibility)
-    document.getElementById('btn-insert-tab').addEventListener('click', () => {
-      editor.trigger('keyboard', 'type', { text: '\t' });
-      editor.focus();
-    });
-    document.getElementById('btn-insert-newline').addEventListener('click', () => {
-      editor.trigger('keyboard', 'type', { text: '\n' });
-      editor.focus();
-    });
-
-    // Initialize UI
-    updateFileList();
-    updateTabs();
+    // Open default file on load
     openFile(state.activeFile);
-
   });
 </script>
 
