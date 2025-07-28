@@ -236,16 +236,19 @@
     flex-direction: column;
     gap: 6px;
   }
-  #ps5-buttons button {
+  #ps5-buttons button, #ps5-buttons a {
     background-color: #0e639c;
-    border: none;
     color: white;
     padding: 6px 12px;
     border-radius: 3px;
     font-size: 14px;
     cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    user-select: none;
   }
-  #ps5-buttons button:hover {
+  #ps5-buttons button:hover, #ps5-buttons a:hover {
     background-color: #1177cc;
   }
 </style>
@@ -283,8 +286,8 @@
 
       <!-- PS5 buttons overlay -->
       <div id="ps5-buttons" aria-label="PS5 editor controls">
-       <a href="chat.html">Chat</a>
-        <button id="btn-insert-newline" title="Insert Newline">Newline</button>
+       <a href="chat.html" aria-label="Open Chat page">Chat</a>
+       <button id="btn-insert-newline" title="Insert Newline">Newline</button>
       </div>
     </div>
     <footer id="status-bar" aria-live="polite">
@@ -467,10 +470,7 @@ firebase.initializeApp(firebaseConfig);
     };
   }
 
-  // Insert Tab or Newline buttons for PS5
-  document.getElementById('btn-insert-tab').onclick = () => {
-    insertAtCursor(codeEditor, '  ');
-  };
+  // Insert Newline button for PS5
   document.getElementById('btn-insert-newline').onclick = () => {
     insertAtCursor(codeEditor, '\n');
   };
