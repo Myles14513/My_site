@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>VS Code Web Clone with Monaco & Full UI</title>
 
 <!-- VS Code font -->
@@ -10,6 +10,17 @@
 
 <!-- Monaco Editor CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs/loader.min.js"></script>
+
+<!-- Web App Manifest -->
+<link rel="manifest" href="/manifest.json" />
+
+<!-- iOS Meta Tags -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="VSCode Web Clone" />
+
+<!-- iOS Home Screen Icon -->
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 
 <style>
   /* Reset and base */
