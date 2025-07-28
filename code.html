@@ -300,18 +300,17 @@
 
 <script>
   // Your Firebase config here
-  const firebaseConfig = {
-    apiKey: "AIzaSyCYS5BIrIVCnUiEfEhXxbzorqft1xJIxTg",
-    authDomain: "idek-81ffd.firebaseapp.com",
-    databaseURL: "https://idek-81ffd-default-rtdb.firebaseio.com",
-    projectId: "idek-81ffd",
-    storageBucket: "idek-81ffd.firebasestorage.app",
-    messagingSenderId: "298718608043",
-    appId: "1:298718608043:web:40a984000951cb23cf15ee",
-    measurementId: "G-BLL6VTXH9D"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+ const firebaseConfig = {
+  apiKey: "AIzaSyCYS5BIrIVCnUiEfEhXxbzorqft1xJIxTg",
+  authDomain: "idek-81ffd.firebaseapp.com",
+  databaseURL: "https://idek-81ffd-default-rtdb.firebaseio.com",
+  projectId: "idek-81ffd",
+  storageBucket: "idek-81ffd.firebasestorage.app",
+  messagingSenderId: "298718608043",
+  appId: "1:298718608043:web:40a984000951cb23cf15ee",
+  measurementId: "G-BLL6VTXH9D"
+};
+firebase.initializeApp(firebaseConfig);
 
   // Elements
   const fileListEl = document.getElementById('file-list');
@@ -499,7 +498,8 @@
     if(e.key === 'Enter') addFile(newFileNameInput.value.trim());
   });
 
-  // Save files to Firebase
+  const db = firebase.database();
+
   btnSaveFiles.addEventListener("click", () => {
     if (activeFile) {
       files[activeFile].content = codeEditor.value;
@@ -513,7 +513,7 @@
 
     statusLeft.textContent = "Saving...";
     console.log("Saving files with code:", code, files);
-    db.ref("codes/" + code).set(files)
+    firebase.database().ref('codes/' + code).set(files)
       .then(() => {
         statusLeft.textContent = "Saved!";
         console.log("Save success");
@@ -526,7 +526,6 @@
       });
   });
 
-  // Load files from Firebase
   btnLoadFiles.addEventListener("click", () => {
     const code = saveLoadCodeInput.value.trim();
     if (!code) {
@@ -536,7 +535,7 @@
 
     statusLeft.textContent = "Loading...";
     console.log("Loading files with code:", code);
-    db.ref("codes/" + code).once("value")
+    firebase.database().ref('codes/' + code).once('value')
       .then((snapshot) => {
         if (!snapshot.exists()) {
           statusLeft.textContent = "No data found";
@@ -574,12 +573,7 @@
         console.error("Load error:", error);
       });
   });
-
-  // Initialize with a default file
-  if(Object.keys(files).length === 0){
-    addFile('index.html');
-    files['index.html'].content = "<!-- Start coding here -->";
-  }
 </script>
+
 </body>
 </html>
