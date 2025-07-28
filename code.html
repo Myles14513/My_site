@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>VS Code Web Clone with Monaco & Full UI</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json" />
+
+<!-- iOS Meta tags for standalone mode -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="VSCodeClone" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
 
 <!-- VS Code font -->
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
@@ -23,6 +32,8 @@
     color: #cccccc;
     user-select: none;
     overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: text; /* enable text selection on mobile */
   }
 
   /* Layout */
@@ -58,6 +69,7 @@
     justify-content: center;
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
     position: relative;
+    -webkit-tap-highlight-color: transparent;
   }
   #sidebar button:hover {
     background-color: #333333;
@@ -166,6 +178,7 @@
     color: #cccccc;
     font-size: 14px;
     outline: none;
+    -webkit-appearance: none;
   }
   #new-file-name::placeholder {
     color: #777777;
@@ -387,24 +400,29 @@
     background-color: #005f9e;
   }
 
-  /* Force Type Mode Button */
-  #btn-force-type {
-    position: absolute;
-    bottom: 80px;
-    right: 20px;
-    background-color: #e81123;
-    border: none;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    user-select: none;
-    z-index: 11;
-    transition: background-color 0.15s ease-in-out;
-  }
-  #btn-force-type:hover {
-    background-color: #b50d18;
+  /* Mobile optimizations */
+  @media (max-width: 600px) {
+    #sidebar {
+      width: 48px;
+    }
+    #panels {
+      display: none;
+    }
+    #main-area {
+      flex-grow: 1;
+    }
+    #tab-bar {
+      overflow-x: scroll;
+    }
+    #sidebar button {
+      width: 48px;
+      height: 48px;
+      font-size: 28px;
+    }
+    #ps5-buttons button {
+      padding: 12px 20px;
+      font-size: 18px;
+    }
   }
 </style>
 </head>
@@ -479,7 +497,6 @@
         <button id="btn-insert-tab" aria-label="Insert tab">Insert Tab</button>
         <button id="btn-insert-newline" aria-label="Insert newline">Insert Newline</button>
       </div>
-      <button id="btn-force-type" aria-label="Force Type Mode">Force Type Mode</button>
     </div>
     <footer id="status-bar" role="contentinfo" aria-live="polite">
       <span id="status-message">Ready</span>
@@ -514,292 +531,273 @@
       currentPanel: 'explorer',
       settings: {
         theme: 'vs-dark',
-        fontSize: 14,
-      },
+        fontSize: 14
+      }
     };
 
-    // Elements
-    const sidebarButtons = document.querySelectorAll('#sidebar button');
+    // DOM Elements
+    const fileList = document.getElementById('file-list');
+    const tabBar = document.getElementById('tab-bar');
+    const editorContainer = document.getElementById('editor');
+    const statusMessage = document.getElementById('status-message');
+    const statusPosition = document.getElementById('status-position');
     const panels = {
       explorer: document.getElementById('panel-explorer'),
       search: document.getElementById('panel-search'),
       run: document.getElementById('panel-run'),
       extensions: document.getElementById('panel-extensions'),
-      settings: document.getElementById('panel-settings'),
+      settings: document.getElementById('panel-settings')
     };
-    const fileListEl = document.getElementById('file-list');
-    const newFileNameInput = document.getElementById('new-file-name');
-    const btnNewFile = document.getElementById('btn-new-file');
-    const tabBar = document.getElementById('tab-bar');
-    const statusMessage = document.getElementById('status-message');
-    const statusPosition = document.getElementById('status-position');
-    const searchInput = document.getElementById('search-input');
-    const searchResults = document.getElementById('search-results');
-    const btnRunCode = document.getElementById('btn-run-code');
-    const runIframe = document.getElementById('run-iframe');
-    const settingThemeSelect = document.getElementById('setting-theme');
-    const settingFontSizeInput = document.getElementById('setting-fontsize');
-    const btnResetSettings = document.getElementById('btn-reset-settings');
-    const btnInsertTab = document.getElementById('btn-insert-tab');
-    const btnInsertNewline = document.getElementById('btn-insert-newline');
-    const btnForceType = document.getElementById('btn-force-type');
 
-    // Monaco editor instance
-    let editor = monaco.editor.create(document.getElementById('editor'), {
+    // Monaco Editor instance
+    let editor = monaco.editor.create(editorContainer, {
       value: state.files[state.activeFile],
-      language: getLanguageFromFile(state.activeFile),
+      language: getLanguage(state.activeFile),
       theme: state.settings.theme,
       fontSize: state.settings.fontSize,
       automaticLayout: true,
-      minimap: { enabled: false },
-      scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 }
+      minimap: { enabled: false }
     });
 
-    // Helper: get language from file extension
-    function getLanguageFromFile(filename) {
-      if (filename.endsWith('.html')) return 'html';
-      if (filename.endsWith('.css')) return 'css';
+    // Helpers
+    function getLanguage(filename) {
       if (filename.endsWith('.js')) return 'javascript';
-      if (filename.endsWith('.json')) return 'json';
       if (filename.endsWith('.ts')) return 'typescript';
+      if (filename.endsWith('.json')) return 'json';
+      if (filename.endsWith('.css')) return 'css';
+      if (filename.endsWith('.html') || filename.endsWith('.htm')) return 'html';
       if (filename.endsWith('.py')) return 'python';
       return 'plaintext';
     }
 
-    // Switch panel
-    sidebarButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        sidebarButtons.forEach(b => {
-          b.classList.remove('active');
-          b.setAttribute('aria-pressed', 'false');
-        });
-        btn.classList.add('active');
-        btn.setAttribute('aria-pressed', 'true');
-        const id = btn.id.replace('btn-', '');
-        state.currentPanel = id;
-        Object.keys(panels).forEach(key => {
-          if (key === id) {
-            panels[key].classList.add('active');
-          } else {
-            panels[key].classList.remove('active');
-          }
-        });
-      });
-    });
-
-    // Render file list
-    function renderFileList() {
-      fileListEl.innerHTML = '';
-      Object.keys(state.files).forEach(filename => {
+    function updateFileList() {
+      fileList.innerHTML = '';
+      for (const file in state.files) {
         const li = document.createElement('li');
-        li.textContent = filename;
-        li.setAttribute('role', 'listitem');
+        li.textContent = file;
+        li.className = (file === state.activeFile) ? 'active' : '';
         li.tabIndex = 0;
-        if (filename === state.activeFile) {
-          li.classList.add('active');
-        }
-        li.addEventListener('click', () => openFile(filename));
+        li.setAttribute('role', 'button');
+        li.addEventListener('click', () => openFile(file));
         li.addEventListener('keydown', e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            openFile(filename);
-          }
+          if (e.key === 'Enter' || e.key === ' ') openFile(file);
         });
-
         // Delete button
-        const delBtn = document.createElement('button');
-        delBtn.textContent = '×';
-        delBtn.className = 'delete-btn';
-        delBtn.title = `Delete ${filename}`;
-        delBtn.addEventListener('click', e => {
-          e.stopPropagation();
-          if (confirm(`Delete file "${filename}"?`)) {
-            delete state.files[filename];
-            if (state.activeFile === filename) {
-              const files = Object.keys(state.files);
-              state.activeFile = files.length ? files[0] : null;
-              if (state.activeFile) openFile(state.activeFile);
-              else {
-                editor.setValue('');
-                updateTabBar();
+        if (file !== 'index.html') {
+          const delBtn = document.createElement('button');
+          delBtn.textContent = '×';
+          delBtn.className = 'delete-btn';
+          delBtn.title = 'Delete file';
+          delBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            if (confirm(`Delete ${file}?`)) {
+              delete state.files[file];
+              if (state.activeFile === file) {
+                const files = Object.keys(state.files);
+                openFile(files[0]);
               }
+              updateFileList();
+              updateTabs();
             }
-            renderFileList();
-          }
-        });
-        li.appendChild(delBtn);
-
-        fileListEl.appendChild(li);
-      });
+          });
+          li.appendChild(delBtn);
+        }
+        fileList.appendChild(li);
+      }
     }
 
-    // Open file
-    function openFile(filename) {
-      if (!state.files[filename]) return;
-      state.activeFile = filename;
-      editor.setValue(state.files[filename]);
-      const lang = getLanguageFromFile(filename);
-      monaco.editor.setModelLanguage(editor.getModel(), lang);
-      updateTabBar();
-      updateStatus('File opened: ' + filename);
-    }
-
-    // Add new file
-    btnNewFile.addEventListener('click', () => {
-      const name = newFileNameInput.value.trim();
-      if (!name) {
-        alert('Enter a valid file name');
-        return;
-      }
-      if (state.files[name]) {
-        alert('File already exists');
-        return;
-      }
-      state.files[name] = '';
-      renderFileList();
-      openFile(name);
-      newFileNameInput.value = '';
-    });
-
-    // Update tab bar
-    function updateTabBar() {
+    function updateTabs() {
       tabBar.innerHTML = '';
-      Object.keys(state.files).forEach(filename => {
+      state.openTabs.forEach(file => {
         const tab = document.createElement('div');
-        tab.className = 'tab' + (filename === state.activeFile ? ' active' : '');
-        tab.textContent = filename;
-        tab.tabIndex = 0;
+        tab.className = 'tab' + (file === state.activeFile ? ' active' : '');
+        tab.setAttribute('role', 'tab');
+        tab.setAttribute('tabindex', 0);
+        tab.textContent = file;
 
-        tab.addEventListener('click', () => openFile(filename));
-        tab.addEventListener('keydown', e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            openFile(filename);
-          }
-        });
-
+        // Close button
         const closeBtn = document.createElement('span');
         closeBtn.className = 'close-btn';
         closeBtn.textContent = '×';
-        closeBtn.title = `Close ${filename}`;
+        closeBtn.title = 'Close tab';
         closeBtn.addEventListener('click', e => {
           e.stopPropagation();
-          delete state.files[filename];
-          if (state.activeFile === filename) {
-            const files = Object.keys(state.files);
-            state.activeFile = files.length ? files[0] : null;
-            if (state.activeFile) openFile(state.activeFile);
-            else editor.setValue('');
-          }
-          renderFileList();
-          updateTabBar();
+          closeTab(file);
         });
         tab.appendChild(closeBtn);
+
+        tab.addEventListener('click', () => openFile(file));
+        tab.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') openFile(file);
+          if (e.key === 'Delete' || (e.key === 'Backspace' && e.ctrlKey)) closeTab(file);
+        });
 
         tabBar.appendChild(tab);
       });
     }
 
-    // Update status bar message
-    function updateStatus(msg) {
-      statusMessage.textContent = msg;
+    function openFile(file) {
+      if (!state.files[file]) return;
+      if (!state.openTabs.includes(file)) {
+        state.openTabs.push(file);
+      }
+      state.activeFile = file;
+      editor.setValue(state.files[file]);
+      monaco.editor.setModelLanguage(editor.getModel(), getLanguage(file));
+      updateTabs();
+      updateFileList();
+      updateStatus('Opened ' + file);
     }
 
-    // Update status bar cursor position
-    editor.onDidChangeCursorPosition(e => {
-      const pos = e.position;
-      statusPosition.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
-    });
+    function closeTab(file) {
+      const idx = state.openTabs.indexOf(file);
+      if (idx === -1) return;
+      state.openTabs.splice(idx, 1);
+      if (state.activeFile === file) {
+        const nextFile = state.openTabs[idx] || state.openTabs[idx - 1];
+        if (nextFile) openFile(nextFile);
+        else {
+          // No tabs open, reset editor
+          editor.setValue('');
+          state.activeFile = null;
+          updateTabs();
+          updateFileList();
+          updateStatus('No file open');
+        }
+      } else {
+        updateTabs();
+      }
+    }
 
-    // Save content on editor change
+    function updateStatus(message) {
+      statusMessage.textContent = message;
+    }
+
+    // Save editor content on change
     editor.onDidChangeModelContent(() => {
       if (!state.activeFile) return;
       state.files[state.activeFile] = editor.getValue();
       state.unsavedFiles.add(state.activeFile);
-      updateStatus(`Editing ${state.activeFile} (Unsaved)`);
-      updateTabBar();
+      updateStatus('Editing ' + state.activeFile);
+      updateTabs();
     });
 
-    // Run code in iframe
-    btnRunCode.addEventListener('click', () => {
-      if (!state.activeFile) {
-        alert('Open a file to run');
-        return;
+    // Update cursor position in status bar
+    editor.onDidChangeCursorPosition(e => {
+      statusPosition.textContent = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+    });
+
+    // New file creation
+    document.getElementById('btn-new-file').addEventListener('click', () => {
+      const input = document.getElementById('new-file-name');
+      const name = input.value.trim();
+      if (!name) return alert('Please enter a file name.');
+      if (state.files[name]) return alert('File already exists.');
+      state.files[name] = '';
+      input.value = '';
+      openFile(name);
+      updateFileList();
+      updateTabs();
+    });
+
+    // Sidebar buttons for panels
+    document.getElementById('btn-explorer').addEventListener('click', () => switchPanel('explorer'));
+    document.getElementById('btn-search').addEventListener('click', () => switchPanel('search'));
+    document.getElementById('btn-run').addEventListener('click', () => switchPanel('run'));
+    document.getElementById('btn-extensions').addEventListener('click', () => switchPanel('extensions'));
+    document.getElementById('btn-settings').addEventListener('click', () => switchPanel('settings'));
+
+    function switchPanel(panel) {
+      if (state.currentPanel === panel) return;
+      state.currentPanel = panel;
+      for (const key in panels) {
+        panels[key].classList.toggle('active', key === panel);
       }
-      if (!state.activeFile.endsWith('.html')) {
-        alert('Only HTML files can be run');
-        return;
+      // Update sidebar buttons aria-pressed & active class
+      document.querySelectorAll('#sidebar button').forEach(btn => {
+        const idMap = {
+          'btn-explorer': 'explorer',
+          'btn-search': 'search',
+          'btn-run': 'run',
+          'btn-extensions': 'extensions',
+          'btn-settings': 'settings'
+        };
+        const panelKey = idMap[btn.id];
+        const isActive = panelKey === panel;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive);
+      });
+    }
+
+    // Run code button - outputs html/js/css from open files (only html/js/css supported)
+    document.getElementById('btn-run-code').addEventListener('click', () => {
+      // Get current HTML, CSS, JS from files or empty strings
+      const html = state.files['index.html'] || '';
+      const css = state.files['style.css'] || '';
+      const js = state.files['script.js'] || '';
+
+      const source = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>${css}</style>
+</head>
+<body>
+${html}
+<script>${js}<\/script>
+</body>
+</html>`;
+      const iframe = document.getElementById('run-iframe');
+      iframe.srcdoc = source;
+      updateStatus('Ran code');
+    });
+
+    // Settings form: theme and font size
+    const settingTheme = document.getElementById('setting-theme');
+    const settingFontSize = document.getElementById('setting-fontsize');
+    const btnResetSettings = document.getElementById('btn-reset-settings');
+
+    settingTheme.value = state.settings.theme;
+    settingFontSize.value = state.settings.fontSize;
+
+    settingTheme.addEventListener('change', () => {
+      state.settings.theme = settingTheme.value;
+      monaco.editor.setTheme(state.settings.theme);
+    });
+
+    settingFontSize.addEventListener('change', () => {
+      const val = parseInt(settingFontSize.value, 10);
+      if (val >= 8 && val <= 40) {
+        state.settings.fontSize = val;
+        editor.updateOptions({ fontSize: val });
       }
-      const code = editor.getValue();
-      runIframe.srcdoc = code;
-      updateStatus('Running ' + state.activeFile);
     });
 
-    // Insert Tab button for PS5
-    btnInsertTab.addEventListener('click', () => {
-      editor.trigger('keyboard', 'type', { text: '\t' });
-      editor.focus();
-    });
-
-    // Insert Newline button for PS5
-    btnInsertNewline.addEventListener('click', () => {
-      editor.trigger('keyboard', 'type', { text: '\n' });
-      editor.focus();
-    });
-
-    // Settings change handlers
-    settingThemeSelect.addEventListener('change', () => {
-      const theme = settingThemeSelect.value;
-      state.settings.theme = theme;
-      monaco.editor.setTheme(theme);
-    });
-
-    settingFontSizeInput.addEventListener('change', () => {
-      const size = parseInt(settingFontSizeInput.value, 10);
-      if (size >= 8 && size <= 40) {
-        state.settings.fontSize = size;
-        editor.updateOptions({ fontSize: size });
-      }
-    });
-
-    // Reset settings
     btnResetSettings.addEventListener('click', () => {
-      state.settings = { theme: 'vs-dark', fontSize: 14 };
-      settingThemeSelect.value = state.settings.theme;
-      settingFontSizeInput.value = state.settings.fontSize;
+      state.settings.theme = 'vs-dark';
+      state.settings.fontSize = 14;
+      settingTheme.value = state.settings.theme;
+      settingFontSize.value = state.settings.fontSize;
       monaco.editor.setTheme(state.settings.theme);
       editor.updateOptions({ fontSize: state.settings.fontSize });
     });
 
-    // Search functionality (basic)
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value.toLowerCase();
-      searchResults.innerHTML = '';
-      if (!query) return;
-      Object.entries(state.files).forEach(([filename, content]) => {
-        if (content.toLowerCase().includes(query)) {
-          const li = document.createElement('li');
-          li.textContent = filename;
-          li.tabIndex = 0;
-          li.addEventListener('click', () => openFile(filename));
-          searchResults.appendChild(li);
-        }
-      });
-    });
-
-    // Force Type Mode button: cancel rename and focus editor
-    btnForceType.addEventListener('click', () => {
-      const renameController = editor.getContribution('editor.contrib.renameController');
-      if (renameController && renameController._widget) {
-        renameController._widget.cancel();
-      }
+    // Insert Tab / Newline buttons (for PS5 & accessibility)
+    document.getElementById('btn-insert-tab').addEventListener('click', () => {
+      editor.trigger('keyboard', 'type', { text: '\t' });
       editor.focus();
-      updateStatus('Forced editor focus and exited rename mode');
+    });
+    document.getElementById('btn-insert-newline').addEventListener('click', () => {
+      editor.trigger('keyboard', 'type', { text: '\n' });
+      editor.focus();
     });
 
-    // Initial render
-    renderFileList();
-    updateTabBar();
+    // Initialize UI
+    updateFileList();
+    updateTabs();
+    openFile(state.activeFile);
+
   });
 </script>
 
