@@ -323,123 +323,186 @@
   };
   firebase.initializeApp(firebaseConfig);
 
-  // Elements
-  const fileListEl = document.getElementById('file-list');
-  const newFileNameInput = document.getElementById('new-file-name');
-  const btnAddFile = document.getElementById('btn-add-file');
-  const tabBar = document.getElementById('tab-bar');
-  const codeEditor = document.getElementById('code-editor');
-  const statusLeft = document.getElementById('status-left');
-  const statusRight = document.getElementById('status-right');
-  const btnSaveFiles = document.getElementById('btn-save-files');
-  const btnLoadFiles = document.getElementById('btn-load-files');
-  const saveLoadCodeInput = document.getElementById('save-load-code');
-  const editorContainer = document.getElementById('editor-container');
+// Elements
+const fileListEl = document.getElementById('file-list');
+const newFileNameInput = document.getElementById('new-file-name');
+const btnAddFile = document.getElementById('btn-add-file');
+const tabBar = document.getElementById('tab-bar');
+const codeEditor = document.getElementById('code-editor');
+const statusLeft = document.getElementById('status-left');
+const statusRight = document.getElementById('status-right');
+const btnSaveFiles = document.getElementById('btn-save-files');
+const btnLoadFiles = document.getElementById('btn-load-files');
+const saveLoadCodeInput = document.getElementById('save-load-code');
+const editorContainer = document.getElementById('editor-container');
 
-  // Files data structure: { filename: { content, language } }
-  const files = {};
-  let openTabs = [];
-  let activeFile = null;
+// Files data structure: { filename: { content, language } }
+const files = {};
+let openTabs = []; // filenames currently open in tabs
+let activeFile = null;
 
-  // Detect language by file extension
-  function detectLanguage(filename) {
-    if(filename.endsWith('.html')) return 'html';
-    if(filename.endsWith('.css')) return 'css';
-    if(filename.endsWith('.js')) return 'javascript';
-    if(filename.endsWith('.py')) return 'python';
-    return 'plaintext';
+// Helper: detect language by file extension
+function detectLanguage(filename) {
+  if(filename.endsWith('.html')) return 'html';
+  if(filename.endsWith('.css')) return 'css';
+  if(filename.endsWith('.js')) return 'javascript';
+  if(filename.endsWith('.py')) return 'python';
+  if(filename.endsWith('.comp')) return 'comp';
+  return 'plaintext';
+}
+
+// Save all files to localStorage
+function saveFilesToLocal() {
+  localStorage.setItem('files', JSON.stringify(files));
+  localStorage.setItem('openTabs', JSON.stringify(openTabs));
+  localStorage.setItem('activeFile', activeFile);
+  statusLeft.textContent = 'Locally saving...';
+  setTimeout(() => {
+    if(statusLeft.textContent === 'Locally saving...') {
+      statusLeft.textContent = 'Ready';
+    }
+  }, 1500);
+}
+
+// Load all files from localStorage
+function loadFilesFromLocal() {
+  const savedFiles = localStorage.getItem('files');
+  if(savedFiles) {
+    Object.assign(files, JSON.parse(savedFiles));
+  }
+  const savedTabs = localStorage.getItem('openTabs');
+  if(savedTabs) {
+    openTabs = JSON.parse(savedTabs);
+  }
+  const savedActive = localStorage.getItem('activeFile');
+  if(savedActive) {
+    activeFile = savedActive;
+  }
+}
+
+// Add a file to the files object and UI
+function addFile(name) {
+  if(!name) {
+    alert('Please enter a file name');
+    return;
+  }
+  if(files[name]) {
+    alert('File already exists');
+    return;
   }
 
-  // Add file
-  function addFile(name) {
-    if(!name) {
-      alert('Please enter a file name');
-      return;
+  // Special: if .comp file, prompt for target file name immediately
+  if(name.endsWith('.comp')) {
+    let targetFile = '';
+    while (!targetFile) {
+      targetFile = prompt(`Enter the target filename that ${name} should preview (must exist):`).trim();
+      if(targetFile === null) return; // cancel pressed
+      if(!targetFile) alert('You must enter a target filename.');
     }
-    if(files[name]) {
-      alert('File already exists');
-      return;
-    }
+    files[name] = { content: targetFile, language: 'comp' };
+  } else {
     files[name] = { content: '', language: detectLanguage(name) };
-    saveFilesToLocal();
-    renderFileList();
-    openFile(name);
-    newFileNameInput.value = '';
   }
 
-  // Render file list in sidebar
-  function renderFileList() {
-    fileListEl.innerHTML = '';
-    Object.keys(files).forEach(name => {
-      const li = document.createElement('li');
-      li.textContent = name;
-      li.tabIndex = 0;
-      li.setAttribute('role', 'button');
-      if(name === activeFile) li.classList.add('active');
+  renderFileList();
+  openFile(name);
+  newFileNameInput.value = '';
 
-      li.onclick = () => openFile(name);
-      li.onkeydown = e => { if(e.key === 'Enter' || e.key === ' ') openFile(name); };
+  saveFilesToLocal();
+}
 
-      const delBtn = document.createElement('button');
-      delBtn.textContent = '×';
-      delBtn.title = 'Delete file';
-      delBtn.className = 'delete-file';
-      delBtn.onclick = (e) => {
-        e.stopPropagation();
-        if(confirm(`Delete file "${name}"?`)) {
-          closeFile(name);
-          delete files[name];
-          saveFilesToLocal();
-          if(activeFile === name) {
-            activeFile = null;
-            if(Object.keys(files).length) openFile(Object.keys(files)[0]);
-            else renderTabs();
-          }
-          renderFileList();
+// Render file list in sidebar
+function renderFileList() {
+  fileListEl.innerHTML = '';
+  Object.keys(files).forEach(name => {
+    const li = document.createElement('li');
+    li.textContent = name;
+    li.tabIndex = 0;
+    li.setAttribute('role', 'button');
+    if(name === activeFile) li.classList.add('active');
+
+    // Click to open file
+    li.onclick = () => openFile(name);
+    li.onkeydown = e => { if(e.key === 'Enter' || e.key === ' ') openFile(name); };
+
+    // Delete button
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '×';
+    delBtn.title = 'Delete file';
+    delBtn.className = 'delete-file';
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      if(confirm(`Delete file "${name}"?`)) {
+        closeFile(name);
+        delete files[name];
+        if(activeFile === name) {
+          activeFile = null;
+          if(Object.keys(files).length) openFile(Object.keys(files)[0]);
+          else renderTabs();
         }
-      };
-      li.appendChild(delBtn);
+        renderFileList();
+        saveFilesToLocal();
+      }
+    };
+    li.appendChild(delBtn);
 
-      fileListEl.appendChild(li);
-    });
+    fileListEl.appendChild(li);
+  });
+}
+
+// Open a file (show tab + content)
+function openFile(name) {
+  if(!files[name]) return;
+
+  // Save current file content before switching (except if current is .comp preview mode)
+  if(activeFile && activeFile !== name && !activeFile.endsWith('.comp')) {
+    files[activeFile].content = codeEditor.value;
+    saveFilesToLocal();
   }
 
-  // Open file - with .comp preview support
-  function openFile(name) {
-    if(!files[name]) return;
+  activeFile = name;
+  if(!openTabs.includes(name)) openTabs.push(name);
+  renderTabs();
 
-    // Save current file content before switching
-    if(activeFile && activeFile !== name && !activeFile.endsWith('.comp')) {
-      files[activeFile].content = codeEditor.value;
-      saveFilesToLocal();
+  if(name.endsWith('.comp')) {
+    // Create or reuse a toggle button for edit/preview mode
+    let toggleBtn = document.getElementById('comp-toggle-btn');
+
+    if(!toggleBtn) {
+      toggleBtn = document.createElement('button');
+      toggleBtn.id = 'comp-toggle-btn';
+      toggleBtn.textContent = 'Switch to Edit Mode';
+      toggleBtn.style.position = 'absolute';
+      toggleBtn.style.top = '10px';
+      toggleBtn.style.right = '10px';
+      toggleBtn.style.zIndex = '1000';
+      toggleBtn.style.padding = '6px 12px';
+      toggleBtn.style.backgroundColor = '#0e639c';
+      toggleBtn.style.color = 'white';
+      toggleBtn.style.border = 'none';
+      toggleBtn.style.borderRadius = '3px';
+      toggleBtn.style.cursor = 'pointer';
+      editorContainer.appendChild(toggleBtn);
     }
 
-    activeFile = name;
-    if(!openTabs.includes(name)) openTabs.push(name);
-    renderTabs();
+    let isEditMode = false; // start in preview mode
 
-    if(name.endsWith('.comp')) {
-      // Hide editor textarea
+    function showPreview() {
       codeEditor.style.display = 'none';
-
-      // Remove existing iframe if any
+      // Remove existing iframe first
       let existingPreview = document.getElementById('preview-iframe');
       if(existingPreview) existingPreview.remove();
 
-      // Create preview iframe
       const preview = document.createElement('iframe');
       preview.id = 'preview-iframe';
       preview.style.width = '100%';
       preview.style.height = '100%';
       preview.style.border = 'none';
-
       editorContainer.appendChild(preview);
 
-      // The .comp file content should be the filename to preview
       const targetFileName = files[name].content.trim();
 
       if(files[targetFileName]) {
-        // Create a blob URL for the target file content to load in iframe
         const blob = new Blob([files[targetFileName].content], {type: 'text/html'});
         const url = URL.createObjectURL(blob);
         preview.src = url;
@@ -450,212 +513,156 @@
         preview.srcdoc = `<body style="background:#1e1e1e;color:#d4d4d4;padding:20px;font-family:sans-serif;">
           Target file <strong>${targetFileName}</strong> does not exist.</body>`;
       }
-    } else {
-      // Show editor textarea and remove iframe if exists
-      codeEditor.style.display = 'block';
-      const existingPreview = document.getElementById('preview-iframe');
-      if(existingPreview) existingPreview.remove();
 
+      toggleBtn.textContent = 'Switch to Edit Mode';
+      isEditMode = false;
+    }
+
+    function showEdit() {
+      codeEditor.style.display = 'block';
+      let existingPreview = document.getElementById('preview-iframe');
+      if(existingPreview) existingPreview.remove();
+      toggleBtn.textContent = 'Switch to Preview Mode';
+      isEditMode = true;
       loadFileContent(name);
     }
-  }
 
-  // Close file tab
-  function closeFile(name) {
-    if(activeFile === name) {
-      if(!name.endsWith('.comp')) {
+    toggleBtn.onclick = () => {
+      if(isEditMode) {
+        // switch to preview
         files[name].content = codeEditor.value;
         saveFilesToLocal();
+        showPreview();
+      } else {
+        // switch to edit
+        showEdit();
       }
-      activeFile = null;
-    }
-    openTabs = openTabs.filter(n => n !== name);
-    renderTabs();
-    if(!activeFile && openTabs.length) openFile(openTabs[0]);
-  }
-
-  // Render tabs bar
-  function renderTabs() {
-    tabBar.innerHTML = '';
-    openTabs.forEach(name => {
-      const tab = document.createElement('div');
-      tab.className = 'tab' + (name === activeFile ? ' active' : '');
-      tab.textContent = name;
-      tab.title = name;
-
-      tab.onclick = () => openFile(name);
-
-      const closeBtn = document.createElement('span');
-      closeBtn.className = 'close-btn';
-      closeBtn.textContent = '×';
-      closeBtn.title = 'Close file';
-      closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        closeFile(name);
-      };
-      tab.appendChild(closeBtn);
-
-      tabBar.appendChild(tab);
-    });
-  }
-
-  // Load file content into editor textarea
-  function loadFileContent(name) {
-    codeEditor.value = files[name].content;
-    updateStatusBar();
-    codeEditor.focus();
-  }
-
-  // Update status bar line/col
-  function updateStatusBar() {
-    const pos = getCaretPosition(codeEditor);
-    statusRight.textContent = `Ln ${pos.line}, Col ${pos.col}`;
-  }
-  // Get caret position helper
-  function getCaretPosition(el) {
-    const pos = el.selectionStart;
-    const text = el.value.substr(0, pos);
-    const lines = text.split('\n');
-    return {
-      line: lines.length,
-      col: lines[lines.length - 1].length + 1
     };
-  }
 
-  // Insert Newline button for PS5
-  document.getElementById('btn-insert-newline').onclick = () => {
-    insertAtCursor(codeEditor, '\n');
+    // Start in preview mode by default
+    showPreview();
+
+  } else {
+    // Normal files - remove toggle if exists
+    const toggleBtn = document.getElementById('comp-toggle-btn');
+    if(toggleBtn) toggleBtn.remove();
+
+    codeEditor.style.display = 'block';
+    const existingPreview = document.getElementById('preview-iframe');
+    if(existingPreview) existingPreview.remove();
+
+    loadFileContent(name);
+  }
+}
+
+// Close file tab
+function closeFile(name) {
+  // Save current if active
+  if(activeFile === name) {
+    if(!name.endsWith('.comp')) {
+      files[name].content = codeEditor.value;
+    }
+    activeFile = null;
+  }
+  openTabs = openTabs.filter(n => n !== name);
+  renderTabs();
+  if(!activeFile && openTabs.length) openFile(openTabs[0]);
+  saveFilesToLocal();
+}
+
+// Render tabs bar
+function renderTabs() {
+  tabBar.innerHTML = '';
+  openTabs.forEach(name => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (name === activeFile ? ' active' : '');
+    tab.textContent = name;
+    tab.title = name;
+
+    // Clicking tab switches to file
+    tab.onclick = () => openFile(name);
+
+    // Close button on tab
+    const closeBtn = document.createElement('span');
+    closeBtn.className = 'close-btn';
+    closeBtn.textContent = '×';
+    closeBtn.title = 'Close file';
+    closeBtn.onclick = (e) => {
+      e.stopPropagation();
+      closeFile(name);
+    };
+    tab.appendChild(closeBtn);
+
+    tabBar.appendChild(tab);
+  });
+}
+
+// Load file content into editor
+function loadFileContent(name) {
+  codeEditor.value = files[name].content;
+  updateStatusBar();
+  codeEditor.focus();
+}
+
+// Update status bar line/col
+function updateStatusBar() {
+  const pos = getCaretPosition(codeEditor);
+  statusRight.textContent = `Ln ${pos.line}, Col ${pos.col}`;
+}
+// Get caret position helper
+function getCaretPosition(el) {
+  const pos = el.selectionStart;
+  const text = el.value.substr(0, pos);
+  const lines = text.split('\n');
+  return {
+    line: lines.length,
+    col: lines[lines.length - 1].length + 1
   };
+}
 
-  // Insert text helper at cursor
-  function insertAtCursor(textarea, text) {
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const val = textarea.value;
-    textarea.value = val.slice(0, start) + text + val.slice(end);
-    textarea.selectionStart = textarea.selectionEnd = start + text.length;
-    textarea.focus();
-    updateStatusBar();
+// Insert Newline button for PS5
+document.getElementById('btn-insert-newline').onclick = () => {
+  insertAtCursor(codeEditor, '\n');
+};
+
+// Insert text helper at cursor
+function insertAtCursor(textarea, text) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const val = textarea.value;
+  textarea.value = val.slice(0, start) + text + val.slice(end);
+  textarea.selectionStart = textarea.selectionEnd = start + text.length;
+  textarea.focus();
+  updateStatusBar();
+}
+
+// Update status on cursor move or input
+codeEditor.addEventListener('keyup', updateStatusBar);
+codeEditor.addEventListener('click', updateStatusBar);
+
+// Add new file button
+btnAddFile.addEventListener('click', () => {
+  addFile(newFileNameInput.value.trim());
+});
+newFileNameInput.addEventListener('keydown', e => {
+  if(e.key === 'Enter') addFile(newFileNameInput.value.trim());
+});
+
+// Autosave every 20 seconds locally
+setInterval(() => {
+  if(activeFile && !activeFile.endsWith('.comp')) {
+    files[activeFile].content = codeEditor.value;
   }
+  saveFilesToLocal();
+}, 20000);
 
-  // Update status on cursor move or input
-  codeEditor.addEventListener('keyup', updateStatusBar);
-  codeEditor.addEventListener('click', updateStatusBar);
+// Load from localStorage on start
+loadFilesFromLocal();
+renderFileList();
+if(openTabs.length > 0) {
+  openFile(activeFile || openTabs[0]);
+}
 
-  // Add new file button
-  btnAddFile.addEventListener('click', () => {
-    addFile(newFileNameInput.value.trim());
-  });
-  newFileNameInput.addEventListener('keydown', e => {
-    if(e.key === 'Enter') addFile(newFileNameInput.value.trim());
-  });
-
-  // Save files to localStorage every 20 seconds
-  setInterval(() => {
-    if(activeFile && !activeFile.endsWith('.comp')) {
-      files[activeFile].content = codeEditor.value;
-    }
-    saveFilesToLocal();
-  }, 20000);
-
-  // Save all files to localStorage
-  function saveFilesToLocal() {
-    try {
-      localStorage.setItem('vs_files', JSON.stringify(files));
-    } catch(e) {
-      console.warn('Failed to save files locally:', e);
-    }
-  }
-
-  // Load files from localStorage on start
-  function loadFilesFromLocal() {
-    const saved = localStorage.getItem('vs_files');
-    if(saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        Object.assign(files, parsed);
-        openTabs = Object.keys(files);
-        if(openTabs.length > 0) {
-          openFile(openTabs[0]);
-        }
-        renderFileList();
-      } catch(e) {
-        console.warn('Failed to parse saved files:', e);
-      }
-    }
-  }
-  loadFilesFromLocal();
-
-  // Firebase save/load handlers
-  const db = firebase.database();
-
-  btnSaveFiles.addEventListener("click", () => {
-    if (activeFile && !activeFile.endsWith('.comp')) {
-      files[activeFile].content = codeEditor.value;
-      saveFilesToLocal();
-    }
-
-    const code = saveLoadCodeInput.value.trim();
-    if (!code) {
-      alert("Please enter a code");
-      return;
-    }
-
-    statusLeft.textContent = "Saving...";
-    firebase.database().ref('codes/' + code).set(files)
-      .then(() => {
-        statusLeft.textContent = "Saved!";
-        setTimeout(() => statusLeft.textContent = "Ready", 2000);
-      })
-      .catch((error) => {
-        statusLeft.textContent = "Save failed";
-        alert("Save error: " + error.message);
-      });
-  });
-
-  btnLoadFiles.addEventListener("click", () => {
-    const code = saveLoadCodeInput.value.trim();
-    if (!code) {
-      alert("Please enter a code");
-      return;
-    }
-
-    statusLeft.textContent = "Loading...";
-    firebase.database().ref('codes/' + code).once('value')
-      .then((snapshot) => {
-        if (!snapshot.exists()) {
-          statusLeft.textContent = "No data found";
-          alert("No data found for that code.");
-          return;
-        }
-
-        const loadedFiles = snapshot.val();
-
-        for (const key in files) delete files[key];
-        Object.assign(files, loadedFiles);
-        openTabs = [];
-        activeFile = null;
-
-        for (const name in files) {
-          openTabs.push(name);
-        }
-
-        if (openTabs.length > 0) {
-          openFile(openTabs[0]);
-        } else {
-          codeEditor.value = "";
-          renderTabs();
-        }
-
-        renderFileList();
-        statusLeft.textContent = "Loaded!";
-        setTimeout(() => statusLeft.textContent = "Ready", 2000);
-      })
-      .catch((error) => {
-        statusLeft.textContent = "Load failed";
-        alert("Load error: " + error.message);
-      });
-  });
 </script>
 
 </body>
