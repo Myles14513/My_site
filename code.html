@@ -458,6 +458,7 @@
       <div id="ps5-buttons" aria-label="PS5 insert buttons">
         <button id="btn-insert-tab" aria-label="Insert tab">Insert Tab</button>
         <button id="btn-insert-newline" aria-label="Insert newline">Insert Newline</button>
+        <button id="btn-focus-editor" aria-label="Focus editor">Focus Editor</button>
       </div>
     </div>
     <footer id="status-bar" role="contentinfo" aria-live="polite">
@@ -521,6 +522,7 @@
     const btnResetSettings = document.getElementById('btn-reset-settings');
     const btnInsertTab = document.getElementById('btn-insert-tab');
     const btnInsertNewline = document.getElementById('btn-insert-newline');
+    const btnFocusEditor = document.getElementById('btn-focus-editor');
 
     // Monaco editor
     let editor = monaco.editor.create(document.getElementById('editor'), {
@@ -533,224 +535,36 @@
       fontFamily: "'Fira Code', Consolas, monospace",
       tabSize: 2,
       insertSpaces: true,
-      wordWrap: "on"
     });
 
-    // Helpers
+    // Helper: get language from filename extension
     function getLanguageFromFilename(filename) {
-      const ext = filename.split('.').pop().toLowerCase();
-      switch (ext) {
-        case 'js': return 'javascript';
-        case 'ts': return 'typescript';
-        case 'html': return 'html';
-        case 'css': return 'css';
-        case 'json': return 'json';
-        case 'md': return 'markdown';
-        case 'py': return 'python';
-        default: return 'plaintext';
-      }
+      if (filename.endsWith('.js')) return 'javascript';
+      if (filename.endsWith('.ts')) return 'typescript';
+      if (filename.endsWith('.json')) return 'json';
+      if (filename.endsWith('.css')) return 'css';
+      if (filename.endsWith('.html') || filename.endsWith('.htm')) return 'html';
+      if (filename.endsWith('.py')) return 'python';
+      return 'plaintext';
     }
 
-    // Save editor content to state on change
-    editor.onDidChangeModelContent(() => {
-      const val = editor.getValue();
-      state.files[state.activeFile] = val;
-      state.unsavedFiles.add(state.activeFile);
-      updateTabBar();
-      updateStatus('Unsaved changes');
-    });
-
-    // Update status with cursor position
-    editor.onDidChangeCursorPosition((e) => {
-      const pos = e.position;
+    // Update status bar position
+    function updateCursorPosition() {
+      const pos = editor.getPosition();
       statusPosition.textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
-    });
+    }
 
-    // --- File explorer UI ---
-
-    function renderFileList() {
-      fileListEl.innerHTML = '';
-      for (const file of Object.keys(state.files)) {
-        const li = document.createElement('li');
-        li.textContent = file;
-        li.setAttribute('role', 'listitem');
-        if (file === state.activeFile) {
-          li.classList.add('active');
+    // Update status message
+    function updateStatus(msg) {
+      statusMessage.textContent = msg;
+      setTimeout(() => {
+        if (statusMessage.textContent === msg) {
+          statusMessage.textContent = 'Ready';
         }
-        li.addEventListener('click', () => {
-          openFile(file);
-        });
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'delete-btn';
-        delBtn.setAttribute('aria-label', `Delete file ${file}`);
-        delBtn.textContent = '×';
-        delBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteFile(file);
-        });
-        // Prevent deleting if only one file remains
-        if (Object.keys(state.files).length === 1) {
-          delBtn.disabled = true;
-          delBtn.style.opacity = '0.3';
-          delBtn.style.cursor = 'default';
-        }
-        li.appendChild(delBtn);
-
-        fileListEl.appendChild(li);
-      }
+      }, 1500);
     }
 
-    function openFile(filename) {
-      if (!state.files.hasOwnProperty(filename)) return;
-      if (!state.openTabs.includes(filename)) {
-        state.openTabs.push(filename);
-      }
-      state.activeFile = filename;
-      updateEditorModel();
-      updateTabBar();
-      updateStatus('File opened');
-    }
-
-    function deleteFile(filename) {
-      if (!state.files.hasOwnProperty(filename)) return;
-      if (confirm(`Delete file "${filename}"?`)) {
-        delete state.files[filename];
-        state.unsavedFiles.delete(filename);
-
-        // Remove from open tabs
-        const index = state.openTabs.indexOf(filename);
-        if (index > -1) state.openTabs.splice(index, 1);
-
-        // If deleted file was active, switch active file to another
-        if (state.activeFile === filename) {
-          if (state.openTabs.length > 0) {
-            state.activeFile = state.openTabs[0];
-          } else {
-            // No open tabs, pick any file or create new default file
-            const keys = Object.keys(state.files);
-            if (keys.length > 0) {
-              state.activeFile = keys[0];
-              state.openTabs.push(state.activeFile);
-            } else {
-              createNewFile('untitled.txt');
-            }
-          }
-        }
-        updateEditorModel();
-        renderFileList();
-        updateTabBar();
-        updateStatus(`Deleted file "${filename}"`);
-      }
-    }
-
-    function createNewFile(name) {
-      if (!name) return;
-      if (state.files.hasOwnProperty(name)) {
-        alert(`File "${name}" already exists.`);
-        return;
-      }
-      state.files[name] = '';
-      state.openTabs.push(name);
-      state.activeFile = name;
-      renderFileList();
-      updateTabBar();
-      updateEditorModel();
-      updateStatus(`Created new file "${name}"`);
-    }
-
-    btnNewFile.addEventListener('click', () => {
-      const name = newFileNameInput.value.trim();
-      if (!name) return;
-      createNewFile(name);
-      newFileNameInput.value = '';
-    });
-    newFileNameInput.addEventListener('keyup', e => {
-      if (e.key === 'Enter') btnNewFile.click();
-    });
-
-    // --- Tabs UI ---
-
-    function updateTabBar() {
-      tabBar.innerHTML = '';
-      for (const file of state.openTabs) {
-        const tab = document.createElement('div');
-        tab.className = 'tab';
-        if (file === state.activeFile) tab.classList.add('active');
-        tab.setAttribute('role', 'tab');
-        tab.setAttribute('aria-selected', file === state.activeFile);
-        tab.textContent = file;
-
-        const closeBtn = document.createElement('span');
-        closeBtn.className = 'close-btn';
-        closeBtn.textContent = '×';
-        closeBtn.setAttribute('aria-label', `Close tab ${file}`);
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          closeTab(file);
-        });
-
-        tab.appendChild(closeBtn);
-
-        tab.addEventListener('click', () => {
-          openFile(file);
-        });
-
-        if (state.unsavedFiles.has(file)) {
-          const unsavedMark = document.createElement('span');
-          unsavedMark.textContent = '*';
-          unsavedMark.style.color = '#e5c07b';
-          unsavedMark.style.marginLeft = '4px';
-          tab.appendChild(unsavedMark);
-        }
-
-        tabBar.appendChild(tab);
-      }
-    }
-
-    function closeTab(file) {
-      if (!state.openTabs.includes(file)) return;
-
-      if (state.unsavedFiles.has(file)) {
-        if (!confirm(`File "${file}" has unsaved changes. Close anyway?`)) return;
-      }
-
-      const index = state.openTabs.indexOf(file);
-      state.openTabs.splice(index, 1);
-      state.unsavedFiles.delete(file);
-
-      if (state.activeFile === file) {
-        if (state.openTabs.length > 0) {
-          state.activeFile = state.openTabs[Math.max(0, index - 1)];
-        } else {
-          // No open tabs: create default file
-          createNewFile('untitled.txt');
-        }
-      }
-      updateTabBar();
-      updateEditorModel();
-      renderFileList();
-      updateStatus(`Closed tab "${file}"`);
-    }
-
-    // --- Editor model update ---
-
-    function updateEditorModel() {
-      const val = state.files[state.activeFile] ?? '';
-      const lang = getLanguageFromFilename(state.activeFile);
-      const model = monaco.editor.getModels().find(m => m.uri.path === `/${state.activeFile}`);
-      if (model) {
-        editor.setModel(model);
-        if (model.getValue() !== val) model.setValue(val);
-      } else {
-        const uri = monaco.Uri.parse(`inmemory://model/${state.activeFile}`);
-        const newModel = monaco.editor.createModel(val, lang, uri);
-        editor.setModel(newModel);
-      }
-    }
-
-    // --- Sidebar panel switching ---
-
+    // Switch panel logic
     sidebarButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         sidebarButtons.forEach(b => {
@@ -759,204 +573,226 @@
         });
         btn.classList.add('active');
         btn.setAttribute('aria-pressed', 'true');
-
-        const panelKey = btn.id.replace('btn-', '');
-        showPanel(panelKey);
+        // Show relevant panel
+        Object.entries(panels).forEach(([key, panel]) => {
+          panel.classList.toggle('active', key === btn.id.replace('btn-', ''));
+        });
+        state.currentPanel = btn.id.replace('btn-', '');
       });
     });
 
-    function showPanel(panelKey) {
-      for (const key in panels) {
-        if (key === panelKey) {
-          panels[key].classList.add('active');
-        } else {
-          panels[key].classList.remove('active');
-        }
-      }
-      state.currentPanel = panelKey;
-    }
-
-    // --- Status bar update ---
-
-    function updateStatus(msg) {
-      statusMessage.textContent = msg;
-      setTimeout(() => {
-        if (statusMessage.textContent === msg) {
-          statusMessage.textContent = 'Ready';
-        }
-      }, 2500);
-    }
-
-    // --- Search functionality ---
-
-    function searchInFiles(term) {
-      searchResults.innerHTML = '';
-      if (!term) return;
-      term = term.toLowerCase();
-      for (const [filename, content] of Object.entries(state.files)) {
-        const lines = content.split('\n');
-        lines.forEach((line, idx) => {
-          if (line.toLowerCase().includes(term)) {
-            const li = document.createElement('li');
-            li.textContent = `${filename} (line ${idx + 1}): ${line.trim()}`;
-            li.tabIndex = 0;
-            li.addEventListener('click', () => {
-              openFile(filename);
-              // Scroll editor to line
-              editor.revealLineInCenter(idx + 1);
-              editor.setPosition({ lineNumber: idx + 1, column: 1 });
-              editor.focus();
-              showPanel('explorer');
-              sidebarButtons[0].click();
-            });
-            searchResults.appendChild(li);
+    // Render file list in explorer
+    function renderFileList() {
+      fileListEl.innerHTML = '';
+      Object.keys(state.files).forEach(filename => {
+        const li = document.createElement('li');
+        li.textContent = filename;
+        li.setAttribute('role', 'listitem');
+        li.tabIndex = 0;
+        if (filename === state.activeFile) li.classList.add('active');
+        // Delete button
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '×';
+        delBtn.className = 'delete-btn';
+        delBtn.title = `Delete ${filename}`;
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete file "${filename}"?`)) {
+            delete state.files[filename];
+            // Remove from open tabs if open
+            const idx = state.openTabs.indexOf(filename);
+            if (idx !== -1) state.openTabs.splice(idx, 1);
+            if (state.activeFile === filename) {
+              state.activeFile = state.openTabs[0] || null;
+              if(state.activeFile) {
+                openFile(state.activeFile);
+              } else {
+                editor.setValue('');
+              }
+            }
+            renderTabs();
+            renderFileList();
           }
         });
-      }
-    }
-    let searchTimeout;
-    searchInput.addEventListener('input', e => {
-      clearTimeout(searchTimeout);
-      const val = e.target.value.trim();
-      searchTimeout = setTimeout(() => searchInFiles(val), 250);
-    });
-
-    // --- Run and Debug panel ---
-
-    btnRunCode.addEventListener('click', () => {
-      // Build combined HTML from files
-      // Simple heuristic: index.html is base, add style.css & script.js inline
-      const html = state.files['index.html'] || '<h1>No index.html found</h1>';
-      const css = state.files['style.css'] ?? '';
-      const js = state.files['script.js'] ?? '';
-
-      const fullHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<style>${css}</style>
-</head>
-<body>
-${html}
-<script>${js}<\/script>
-</body>
-</html>`;
-
-      runIframe.srcdoc = fullHtml;
-      updateStatus('Ran code preview');
-    });
-
-    // --- Settings panel ---
-
-    function loadSettings() {
-      const saved = localStorage.getItem('vscode-web-clone-settings');
-      if (saved) {
-        try {
-          const s = JSON.parse(saved);
-          if (s.theme) state.settings.theme = s.theme;
-          if (s.fontSize) state.settings.fontSize = s.fontSize;
-        } catch {}
-      }
-      settingThemeSelect.value = state.settings.theme;
-      settingFontSizeInput.value = state.settings.fontSize;
-      applySettings();
-    }
-    function saveSettings() {
-      localStorage.setItem('vscode-web-clone-settings', JSON.stringify(state.settings));
-    }
-    function applySettings() {
-      monaco.editor.setTheme(state.settings.theme);
-      editor.updateOptions({ fontSize: state.settings.fontSize });
-    }
-    settingThemeSelect.addEventListener('change', e => {
-      state.settings.theme = e.target.value;
-      applySettings();
-      saveSettings();
-    });
-    settingFontSizeInput.addEventListener('change', e => {
-      let val = parseInt(e.target.value);
-      if (isNaN(val) || val < 8) val = 8;
-      if (val > 40) val = 40;
-      state.settings.fontSize = val;
-      applySettings();
-      saveSettings();
-      settingFontSizeInput.value = val;
-    });
-    btnResetSettings.addEventListener('click', () => {
-      state.settings.theme = 'vs-dark';
-      state.settings.fontSize = 14;
-      settingThemeSelect.value = state.settings.theme;
-      settingFontSizeInput.value = state.settings.fontSize;
-      applySettings();
-      saveSettings();
-      updateStatus('Settings reset');
-    });
-    loadSettings();
-
-    // --- Extensions panel ---
-    // Placeholder extensions list - you can expand this later
-    const extensions = [
-      { name: 'Prettier', enabled: true },
-      { name: 'ESLint', enabled: false },
-      { name: 'Python', enabled: false },
-    ];
-    function renderExtensions() {
-      const ul = document.getElementById('extension-list');
-      ul.innerHTML = '';
-      extensions.forEach((ext, i) => {
-        const li = document.createElement('li');
-        const label = document.createElement('label');
-        label.style.display = 'flex';
-        label.style.justifyContent = 'space-between';
-        label.style.alignItems = 'center';
-
-        const span = document.createElement('span');
-        span.textContent = ext.name;
-
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = ext.enabled;
-        checkbox.addEventListener('change', () => {
-          ext.enabled = checkbox.checked;
-          updateStatus(`${ext.name} ${ext.enabled ? 'enabled' : 'disabled'}`);
+        li.appendChild(delBtn);
+        li.addEventListener('click', () => {
+          openFile(filename);
         });
-
-        label.appendChild(span);
-        label.appendChild(checkbox);
-        li.appendChild(label);
-        ul.appendChild(li);
+        fileListEl.appendChild(li);
       });
     }
-    renderExtensions();
 
-    // --- Insert tab and newline buttons ---
-
-    btnInsertTab.addEventListener('click', () => {
-      insertAtCursor('\t');
-    });
-    btnInsertNewline.addEventListener('click', () => {
-      insertAtCursor('\n');
-    });
-
-    function insertAtCursor(text) {
-      const position = editor.getPosition();
-      const range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
-      const id = { major: 1, minor: 1 };
-      const op = { identifier: id, range: range, text: text, forceMoveMarkers: true };
-      editor.executeEdits("my-source", [op]);
-      editor.focus();
+    // Open file: load content into editor and set active tab
+    function openFile(filename) {
+      if (!state.files[filename]) return;
+      state.activeFile = filename;
+      if (!state.openTabs.includes(filename)) {
+        state.openTabs.push(filename);
+      }
+      editor.setValue(state.files[filename]);
+      monaco.editor.setModelLanguage(editor.getModel(), getLanguageFromFilename(filename));
+      renderTabs();
+      renderFileList();
+      updateStatus(`Opened ${filename}`);
     }
+
+    // Render tabs bar
+    function renderTabs() {
+      tabBar.innerHTML = '';
+      state.openTabs.forEach(filename => {
+        const tab = document.createElement('div');
+        tab.className = 'tab';
+        if (filename === state.activeFile) tab.classList.add('active');
+        tab.textContent = filename;
+        tab.tabIndex = 0;
+
+        // Close button
+        const closeBtn = document.createElement('span');
+        closeBtn.textContent = '×';
+        closeBtn.className = 'close-btn';
+        closeBtn.title = `Close ${filename}`;
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          closeTab(filename);
+        });
+        tab.appendChild(closeBtn);
+
+        tab.addEventListener('click', () => {
+          openFile(filename);
+        });
+
+        tabBar.appendChild(tab);
+      });
+    }
+
+    // Close tab
+    function closeTab(filename) {
+      const idx = state.openTabs.indexOf(filename);
+      if (idx === -1) return;
+      state.openTabs.splice(idx, 1);
+      if (state.activeFile === filename) {
+        const newActive = state.openTabs[idx] || state.openTabs[idx - 1];
+        if (newActive) {
+          openFile(newActive);
+        } else {
+          state.activeFile = null;
+          editor.setValue('');
+        }
+      }
+      renderTabs();
+      renderFileList();
+    }
+
+    // Save file content on editor change
+    editor.onDidChangeModelContent(() => {
+      if (state.activeFile) {
+        state.files[state.activeFile] = editor.getValue();
+        state.unsavedFiles.add(state.activeFile);
+        updateStatus(`Editing ${state.activeFile}`);
+      }
+      updateCursorPosition();
+    });
+
+    // New file creation
+    btnNewFile.addEventListener('click', () => {
+      const name = newFileNameInput.value.trim();
+      if (!name) {
+        alert('Please enter a file name.');
+        return;
+      }
+      if (state.files[name]) {
+        alert('File already exists.');
+        return;
+      }
+      state.files[name] = '';
+      newFileNameInput.value = '';
+      openFile(name);
+      renderFileList();
+    });
+
+    // Search files content
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase();
+      searchResults.innerHTML = '';
+      if (!query) return;
+      for (const [filename, content] of Object.entries(state.files)) {
+        if (filename.toLowerCase().includes(query) || content.toLowerCase().includes(query)) {
+          const li = document.createElement('li');
+          li.textContent = filename;
+          li.tabIndex = 0;
+          li.addEventListener('click', () => {
+            openFile(filename);
+            // Switch to explorer panel
+            document.getElementById('btn-explorer').click();
+            searchInput.value = '';
+            searchResults.innerHTML = '';
+          });
+          searchResults.appendChild(li);
+        }
+      }
+    });
+
+    // Run code button - outputs combined HTML+CSS+JS to iframe
+    btnRunCode.addEventListener('click', () => {
+      const html = state.files['index.html'] || '';
+      const css = state.files['style.css'] ? `<style>${state.files['style.css']}</style>` : '';
+      const js = state.files['script.js'] ? `<script>${state.files['script.js']}<\/script>` : '';
+      const srcDoc = html.replace('</head>', `${css}</head>`).replace('</body>', `${js}</body>`);
+      runIframe.srcdoc = srcDoc;
+      updateStatus('Code run');
+    });
+
+    // Settings form
+    settingThemeSelect.value = state.settings.theme;
+    settingFontSizeInput.value = state.settings.fontSize;
+
+    settingThemeSelect.addEventListener('change', () => {
+      state.settings.theme = settingThemeSelect.value;
+      monaco.editor.setTheme(state.settings.theme);
+      updateStatus('Theme changed');
+    });
+
+    settingFontSizeInput.addEventListener('change', () => {
+      let size = parseInt(settingFontSizeInput.value, 10);
+      if (isNaN(size) || size < 8) size = 8;
+      if (size > 40) size = 40;
+      state.settings.fontSize = size;
+      editor.updateOptions({ fontSize: size });
+      settingFontSizeInput.value = size;
+      updateStatus('Font size changed');
+    });
+
+    btnResetSettings.addEventListener('click', () => {
+      state.settings = { theme: 'vs-dark', fontSize: 14 };
+      settingThemeSelect.value = state.settings.theme;
+      settingFontSizeInput.value = state.settings.fontSize;
+      monaco.editor.setTheme(state.settings.theme);
+      editor.updateOptions({ fontSize: state.settings.fontSize });
+      updateStatus('Settings reset');
+    });
+
+    // PS5 Insert tab button
+    btnInsertTab.addEventListener('click', () => {
+      editor.trigger('keyboard', 'type', { text: '\t' });
+      editor.focus();
+    });
+    // PS5 Insert newline button
+    btnInsertNewline.addEventListener('click', () => {
+      editor.trigger('keyboard', 'type', { text: '\n' });
+      editor.focus();
+    });
+
+    // *** New: Focus editor button handler ***
+    btnFocusEditor.addEventListener('click', () => {
+      editor.focus();
+      updateStatus('Editor focused');
+    });
 
     // Initial render
     renderFileList();
-    updateTabBar();
-    updateEditorModel();
-
-    updateStatus('Ready');
-
+    renderTabs();
+    updateCursorPosition();
   });
 </script>
-
 </body>
 </html>
