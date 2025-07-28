@@ -1,20 +1,12 @@
-{
-  "name": "VSCode Web Clone",
-  "short_name": "VSCodeClone",
-  "start_url": "/code",
-  "display": "standalone",
-  "background_color": "#1e1e1e",
-  "theme_color": "#007acc",
-  "icons": [
-    {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
+"icons": [
+  {
+    "src": "https://images.seeklogo.com/logo-png/38/2/visual-studio-code-logo-png_seeklogo-384323.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  },
+  {
+    "src": "https://images.seeklogo.com/logo-png/38/2/visual-studio-code-logo-png_seeklogo-384323.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  }
+]
