@@ -1,32 +1,4 @@
-const consoleOutput = document.getElementById('console-output');
-const toggleConsoleBtn = document.getElementById('btn-toggle-console');
 
-toggleConsoleBtn.onclick = () => {
-  consoleOutput.style.display = consoleOutput.style.display === 'none' ? 'block' : 'none';
-};
-
-// Hijack console.log/error/warn
-['log', 'warn', 'error'].forEach(method => {
-  const original = console[method];
-  console[method] = function (...args) {
-    const line = document.createElement('div');
-    line.style.color = method === 'error' ? 'red' : method === 'warn' ? 'orange' : '#ccc';
-    line.textContent = `[${method.toUpperCase()}] ` + args.map(a => {
-      if (typeof a === 'object') return JSON.stringify(a);
-      return a;
-    }).join(' ');
-    consoleOutput.appendChild(line);
-    consoleOutput.scrollTop = consoleOutput.scrollHeight;
-    original.apply(console, args); // still log to real console
-  };
-});
-
-// Also capture window errors
-window
-
-Sure! Here is your full HTML file with the VS Code-like editor, including the new button to bring up a console that captures errors and console.log output:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
