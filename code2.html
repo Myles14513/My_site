@@ -1,9 +1,38 @@
+const consoleOutput = document.getElementById('console-output');
+const toggleConsoleBtn = document.getElementById('btn-toggle-console');
+
+toggleConsoleBtn.onclick = () => {
+  consoleOutput.style.display = consoleOutput.style.display === 'none' ? 'block' : 'none';
+};
+
+// Hijack console.log/error/warn
+['log', 'warn', 'error'].forEach(method => {
+  const original = console[method];
+  console[method] = function (...args) {
+    const line = document.createElement('div');
+    line.style.color = method === 'error' ? 'red' : method === 'warn' ? 'orange' : '#ccc';
+    line.textContent = `[${method.toUpperCase()}] ` + args.map(a => {
+      if (typeof a === 'object') return JSON.stringify(a);
+      return a;
+    }).join(' ');
+    consoleOutput.appendChild(line);
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    original.apply(console, args); // still log to real console
+  };
+});
+
+// Also capture window errors
+window
+
+Sure! Here is your full HTML file with the VS Code-like editor, including the new button to bring up a console that captures errors and console.log output:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>VS Code Web Editor (Dark Theme + Firebase Save/Load + .comp support)</title>
+<title>VS Code Web Editor (Dark Theme + Firebase Save/Load + .comp support + Console)</title>
 <style>
   /* Reset */
   * {
@@ -213,7 +242,7 @@
     resize: none;
     outline: none;
   }
-  iframe#preview-frame {
+  iframe#preview-frame, iframe#preview-iframe {
     width: 100%;
     height: 100%;
     border: none;
@@ -258,6 +287,39 @@
   #ps5-buttons button:hover, #ps5-buttons a:hover {
     background-color: #1177cc;
   }
+
+  /* Console panel */
+  #console-panel {
+    position: fixed;
+    bottom: 0;
+    left: 240px;
+    right: 0;
+    height: 200px;
+    background-color: #1e1e1e;
+    border-top: 2px solid #007acc;
+    color: #d4d4d4;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 13px;
+    overflow-y: auto;
+    padding: 10px;
+    display: none;
+    z-index: 10000;
+  }
+  #console-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  #console-panel-header button {
+    background: #007acc;
+    border: none;
+    color: white;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 2px 8px;
+    font-size: 12px;
+  }
 </style>
 </head>
 <body>
@@ -297,6 +359,7 @@
       <div id="ps5-buttons" aria-label="PS5 editor controls">
        <a href="chat.html" aria-label="Open Chat page">Chat</a>
        <button id="btn-insert-newline" title="Insert Newline">Newline</button>
+       <button id="btn-toggle-console" title="Toggle Console">Console</button>
       </div>
     </div>
     <footer id="status-bar" aria-live="polite">
@@ -304,6 +367,15 @@
       <div id="status-right">Ln 1, Col 1</div>
     </footer>
   </main>
+</div>
+
+<!-- Console panel -->
+<div id="console-panel" role="region" aria-label="Console output">
+  <div id="console-panel-header">
+    <div>Console</div>
+    <button id="btn-clear-console" aria-label="Clear console">Clear</button>
+  </div>
+  <pre id="console-content"></pre>
 </div>
 
 <!-- Firebase SDK -->
@@ -336,6 +408,11 @@ const btnSaveFiles = document.getElementById('btn-save-files');
 const btnLoadFiles = document.getElementById('btn-load-files');
 const saveLoadCodeInput = document.getElementById('save-load-code');
 const editorContainer = document.getElementById('editor-container');
+
+const btnToggleConsole = document.getElementById('btn-toggle-console');
+const consolePanel = document.getElementById('console-panel');
+const consoleContent = document.getElementById('console-content');
+const btnClearConsole = document.getElementById('btn-clear-console');
 
 // Files data structure: { filename: { content, language } }
 const files = {};
@@ -496,7 +573,9 @@ function openFile(name) {
 
       const preview = document.createElement('iframe');
       preview.id = 'preview-iframe';
-      preview.style.width = '100%';
+      preview
+
+.style.width = '100%';
       preview.style.height = '100%';
       preview.style.border = 'none';
       editorContainer.appendChild(preview);
@@ -663,6 +742,84 @@ renderFileList();
 if(openTabs.length > 0) {
   openFile(activeFile || openTabs[0]);
 }
+
+// =============== Console Implementation ===============
+
+// Show/hide console panel when clicking console button
+btnToggleConsole.onclick = () => {
+  if(consolePanel.style.display === 'none' || consolePanel.style.display === '') {
+    consolePanel.style.display = 'block';
+  } else {
+    consolePanel.style.display = 'none';
+  }
+};
+
+// Clear console content button
+btnClearConsole.onclick = () => {
+  consoleContent.textContent = '';
+};
+
+// Append message to console with timestamp and type
+function appendToConsole(message, type = 'log') {
+  const time = new Date().toLocaleTimeString();
+  const coloredMessage = {
+    log: message,
+    error: `%c${message}`,
+    warn: `%c${message}`
+  };
+
+  // For simplicity, color error and warn differently
+  if(type === 'error') {
+    consoleContent.innerHTML += `<div style="color:#f14c4c;">[${time}] ERROR: ${escapeHtml(message)}</div>`;
+  } else if(type === 'warn') {
+    consoleContent.innerHTML += `<div style="color:#cca700;">[${time}] WARN: ${escapeHtml(message)}</div>`;
+  } else {
+    consoleContent.innerHTML += `<div>[${time}] ${escapeHtml(message)}</div>`;
+  }
+  consolePanel.scrollTop = consolePanel.scrollHeight;
+}
+
+// Escape HTML to avoid injection in console display
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, (match) => {
+    const escape = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return escape[match];
+  });
+}
+
+// Override console methods to capture logs/errors/warns
+(function(){
+  const originalLog = console.log;
+  const originalError = console.error;
+  const originalWarn = console.warn;
+
+  console.log = function(...args) {
+    appendToConsole(args.map(String).join(' '), 'log');
+    originalLog.apply(console, args);
+  };
+  console.error = function(...args) {
+    appendToConsole(args.map(String).join(' '), 'error');
+    originalError.apply(console, args);
+  };
+  console.warn = function(...args) {
+    appendToConsole(args.map(String).join(' '), 'warn');
+    originalWarn.apply(console, args);
+  };
+
+  // Capture uncaught errors globally
+  window.addEventListener('error', (e) => {
+    appendToConsole(e.message + ' (at ' + e.filename + ':' + e.lineno + ':' + e.colno + ')', 'error');
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    appendToConsole('Unhandled Promise Rejection: ' + e.reason, 'error');
+  });
+})();
 
 </script>
 
