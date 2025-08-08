@@ -128,11 +128,35 @@ function saveNotes(mandatoryNotes, optionalNotes) {
 
 
 function addNoteElement(containerId, text) {
+  const container = document.createElement('div');
+  container.style.display = 'flex';
+  container.style.justifyContent = 'space-between';
+  container.style.alignItems = 'center';
+  container.style.background = 'rgba(0,0,0,0.3)';
+  container.style.padding = '6px 10px';
+  container.style.borderRadius = '4px';
+
   const p = document.createElement('p');
   p.textContent = text;
-  document.getElementById(containerId).appendChild(p);
-}
+  p.style.margin = '0';
+  p.style.flexGrow = '1';
 
+  const btn = document.createElement('button');
+  btn.textContent = '✖';  // small cross icon
+  btn.style.marginLeft = '10px';
+  btn.style.background = 'transparent';
+  btn.style.border = 'none';
+  btn.style.color = 'white';
+  btn.style.cursor = 'pointer';
+  btn.title = 'Remove note';
+
+  btn.onclick = () => removeNote(containerId, text, container);
+
+  container.appendChild(p);
+  container.appendChild(btn);
+
+  document.getElementById(containerId).appendChild(container);
+}
 
 window.onload = function() {
   const { mandatoryNotes, optionalNotes } = getStoredNotes();
