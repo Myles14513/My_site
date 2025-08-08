@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="https://help.apple.com/assets/679AC82D10AECD6D6F08C4EC/679AC82E6A62F5E26D053D3D/en_GB/c34b1b0e87e731a83161d9bb21345afc.png">
+
+<style>
+body {
+     background-image: url('https://wallpapercave.com/wp/wp10036526.jpg');
+     background-attachment: fixed;
+     background-position: center center;
+     background-size: 100% 100%;
+     height: 100%;
+     width: 100%;
+     color: #FFFFFF;
+     overflow: hidden;
+     margin: 0;
+     font-family: Arial, sans-serif;
+}
+.Title {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 42px;
+    font-weight: bold;
+}
+.section-title {
+    position: fixed;
+    left: 44%;
+    font-weight: bold;
+    font-size: 24px;
+    text-decoration: underline;
+}
+#mandatoryTitle {
+    top: 20%;
+}
+#optionalTitle {
+    top: 50%;
+}
+#mandatoryNotes, #optionalNotes {
+    position: fixed;
+    left: 50%)
+    width: 30%;
+    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #fff;
+}
+#mandatoryNotes {
+    top: 25%;
+}
+#optionalNotes {
+    top: 55%;
+}
+.btn {
+     position: fixed; 
+     top: 90%;
+     left: 50%;
+     transform: translateX(-50%);
+     display: flex;
+     flex-direction: column;
+     gap: 8px;
+}
+input#input {
+    padding: 6px 8px;
+    font-size: 16px;
+    width: 200px;
+    border-radius: 4px;
+    border: none;
+}
+button {
+    padding: 7px 14px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    border: none;
+    background-color: #333;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+button:hover {
+    background-color: #555;
+}
+</style>
+<title>Notes App</title>
+</head>
+<body>
+
+<h1 class="Title">Notes</h1>
+
+<h2 id="mandatoryTitle" class="section-title">Mandatory</h2>
+<div id="mandatoryNotes"></div>
+
+<h2 id="optionalTitle" class="section-title">Optional</h2>
+<div id="optionalNotes"></div>
+
+<div class="btn">
+  <input id="input" type="text" placeholder="Enter your note..." />
+  <button onclick="addNote()">Add</button>
+</div>
+
+<script>
+
+
+function getStoredNotes() {
+  const mandatoryNotes = JSON.parse(localStorage.getItem('mandatoryNotes') || '[]');
+  const optionalNotes = JSON.parse(localStorage.getItem('optionalNotes') || '[]');
+  return { mandatoryNotes, optionalNotes };
+}
+
+
+function saveNotes(mandatoryNotes, optionalNotes) {
+  localStorage.setItem('mandatoryNotes', JSON.stringify(mandatoryNotes));
+  localStorage.setItem('optionalNotes', JSON.stringify(optionalNotes));
+}
+
+
+function addNoteElement(containerId, text) {
+  const p = document.createElement('p');
+  p.textContent = text;
+  document.getElementById(containerId).appendChild(p);
+}
+
+
+window.onload = function() {
+  const { mandatoryNotes, optionalNotes } = getStoredNotes();
+  mandatoryNotes.forEach(note => addNoteElement('mandatoryNotes', note));
+  optionalNotes.forEach(note => addNoteElement('optionalNotes', note));
+}
+
+function addNote() {
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const response = prompt("Is this note mandatory or optional?");
+  if (!response) return;
+
+  const lower = response.toLowerCase();
+  if (lower !== 'mandatory' && lower !== 'optional') {
+    alert("Please answer with 'mandatory' or 'optional'");
+    return;
+  }
+
+  
+  const { mandatoryNotes, optionalNotes } = getStoredNotes();
+
+  
+  if (lower === 'mandatory') {
+    mandatoryNotes.push(text);
+    addNoteElement('mandatoryNotes', text);
+  } else {
+    optionalNotes.push(text);
+    addNoteElement('optionalNotes', text);
+  }
+
+  
+  saveNotes(mandatoryNotes, optionalNotes);
+
+  input.value = '';
+}
+
+</script>
+
+</body>
+</html>
