@@ -119,21 +119,18 @@ button:hover {
   <button onclick="addNote()">Add</button>
 </div>
 </center>
-<script>
 
-
+  <script>
 function getStoredNotes() {
   const mandatoryNotes = JSON.parse(localStorage.getItem('mandatoryNotes') || '[]');
   const optionalNotes = JSON.parse(localStorage.getItem('optionalNotes') || '[]');
   return { mandatoryNotes, optionalNotes };
 }
 
-
 function saveNotes(mandatoryNotes, optionalNotes) {
   localStorage.setItem('mandatoryNotes', JSON.stringify(mandatoryNotes));
   localStorage.setItem('optionalNotes', JSON.stringify(optionalNotes));
 }
-
 
 function addNoteElement(containerId, text) {
   const container = document.createElement('div');
@@ -143,6 +140,7 @@ function addNoteElement(containerId, text) {
   container.style.background = 'rgba(0,0,0,0.3)';
   container.style.padding = '6px 10px';
   container.style.borderRadius = '4px';
+  container.style.marginBottom = '6px';
 
   const p = document.createElement('p');
   p.textContent = text;
@@ -166,6 +164,22 @@ function addNoteElement(containerId, text) {
   document.getElementById(containerId).appendChild(container);
 }
 
+function removeNote(containerId, text, container) {
+  container.remove();
+
+  const { mandatoryNotes, optionalNotes } = getStoredNotes();
+
+  if (containerId === 'mandatoryNotes') {
+    const index = mandatoryNotes.indexOf(text);
+    if (index > -1) mandatoryNotes.splice(index, 1);
+  } else if (containerId === 'optionalNotes') {
+    const index = optionalNotes.indexOf(text);
+    if (index > -1) optionalNotes.splice(index, 1);
+  }
+
+  saveNotes(mandatoryNotes, optionalNotes);
+}
+
 window.onload = function() {
   const { mandatoryNotes, optionalNotes } = getStoredNotes();
   mandatoryNotes.forEach(note => addNoteElement('mandatoryNotes', note));
@@ -186,10 +200,8 @@ function addNote() {
     return;
   }
 
-  
   const { mandatoryNotes, optionalNotes } = getStoredNotes();
 
-  
   if (lower === 'mandatory') {
     mandatoryNotes.push(text);
     addNoteElement('mandatoryNotes', text);
@@ -198,13 +210,10 @@ function addNote() {
     addNoteElement('optionalNotes', text);
   }
 
-  
   saveNotes(mandatoryNotes, optionalNotes);
 
   input.value = '';
 }
-
 </script>
-
 </body>
 </html>
